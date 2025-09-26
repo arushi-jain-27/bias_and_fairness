@@ -2,6 +2,18 @@ import numpy as np
 import pandas as pd
 
 
+def choose_simulation(simulation_type):
+    if simulation_type == "low_bias_single_cat_equal_distribution":
+        return low_bias_single_cat_equal_distribution()
+    elif simulation_type == "high_bias_single_cat_equal_distribution":
+        return high_bias_single_cat_equal_distribution()
+    elif simulation_type == "high_bias_single_cat_unequal_distribution":
+        return high_bias_single_cat_unequal_distribution()
+    elif simulation_type == "high_bias_multiple_cats_unequal_distribution":
+        return high_bias_multiple_cats_unequal_distribution()
+    elif simulation_type == "high_bias_multiple_cats_unequal_distribution_poor_model":
+        return high_bias_multiple_cats_unequal_distribution_poor_model()
+
 def low_bias_single_cat_equal_distribution():
     num_rows = 6000
     num_groups = 3
@@ -42,7 +54,7 @@ def low_bias_single_cat_equal_distribution():
     df.loc[df['BTBP'] == biased_btbp_category, 'target'] *= 0.85  # Introduce bias in target
     df.loc[df['BTBP'] == biased_btbp_category, 'prediction'] *= 0.75  # Introduce more bias in prediction
 
-    return df
+    return df, [(biased_utbp_category, 1, 1.2), (biased_btup_category, 1.2, 1.2), (biased_btbp_category, 0.85, 0.75)]
 
 
 def high_bias_single_cat_equal_distribution():
@@ -86,7 +98,7 @@ def high_bias_single_cat_equal_distribution():
     df.loc[df['BTBP'] == biased_btbp_category, 'prediction'] *= 0.6  # Introduce more bias in prediction
 
 
-    return df
+    return df, [(biased_utbp_category, 1, 1.3), (biased_btup_category, 1.3, 1.3), (biased_btbp_category, 0.75, 0.6)]
 
 
 
@@ -132,11 +144,11 @@ def high_bias_single_cat_unequal_distribution():
     df.loc[df['BTBP'] == biased_btbp_category, 'prediction'] *= 0.6  # Introduce more bias in prediction
 
 
-    return df
+    return df, [(biased_utbp_category, 1, 1.3), (biased_btup_category, 1.3, 1.3), (biased_btbp_category, 0.75, 0.6)]
 
 
 
-def high_bias_multi_cat_unequal_distribution():
+def high_bias_multiple_cats_unequal_distribution():
 
 
     num_rows = 60000
@@ -204,6 +216,7 @@ def high_bias_multi_cat_unequal_distribution():
     df['prediction'] = df['target'] + np.random.normal(loc=0, scale=5, size=num_rows)
 
     # Apply bias conditions:
+    biased_categories = []
 
     def add_biases(df, group, c1, c2, h, l, hbar, lbar):
         cat = group.lower()
@@ -213,14 +226,18 @@ def high_bias_multi_cat_unequal_distribution():
         # 2. Target is unbiased, but prediction is biased
         biased_category_1 = f'utbp_{cat}_{c1}'
         biased_category_2 = f'utbp_{cat}_{c2}'
+
         df.loc[df[f'UTBP_{group}'] == biased_category_1, 'prediction'] *= h  # Introduce bias in prediction
         df.loc[df[f'UTBP_{group}'] == biased_category_2, 'prediction'] *= l  # Introduce bias in prediction
-
+        biased_categories.append((biased_category_1, 1, h))
+        biased_categories.append((biased_category_2, 1, l))
         # 3. Target is biased, but prediction is unbiased
         biased_category_1 = f'btup_{cat}_{c1}'
         biased_category_2 = f'btup_{cat}_{c2}'
         df.loc[df[f'BTUP_{group}'] == biased_category_1, ['target', 'prediction']] *= h  # Introduce bias in target but prediction still follows the target
         df.loc[df[f'BTUP_{group}'] == biased_category_2, ['target', 'prediction']] *= l  # Introduce bias in target but prediction still follows the target
+        biased_categories.append((biased_category_1, h, h))
+        biased_categories.append((biased_category_2, l, l))
 
         # 4. Both target and prediction are biased for BTBP
         biased_category_1 = f'btbp_{cat}_{c1}'
@@ -229,6 +246,8 @@ def high_bias_multi_cat_unequal_distribution():
         df.loc[df[f'BTBP_{group}'] == biased_category_1, 'prediction'] *= lbar  # Introduce bias in prediction
         df.loc[df[f'BTBP_{group}'] == biased_category_2, 'target'] *= h  # Introduce bias in prediction
         df.loc[df[f'BTBP_{group}'] == biased_category_2, 'prediction'] *= hbar  # Introduce bias in prediction
+        biased_categories.append((biased_category_1, l, lbar))
+        biased_categories.append((biased_category_2, h, hbar))
 
         return df
 
@@ -242,12 +261,12 @@ def high_bias_multi_cat_unequal_distribution():
     df = add_biases(df, "LH_S", 3, 4, 1.2, 1.4, 1.45, 1.1)
     df = add_biases(df, "MM_O", 1, 2, 1.2, 0.85, 1.45, 0.65)
     df = add_biases(df, "MM_S", 1, 2, 1.2, 1.4, 1.45, 1.1)
-    return df
+    return df, biased_categories
 
 
 
 
-def high_bias_multi_cat_unequal_distribution_poor_model():
+def high_bias_multiple_cats_unequal_distribution_poor_model():
     num_rows = 60000
     num_groups = 4
     proportions = [0.25,0.25,0.45, 0.05]
@@ -313,7 +332,7 @@ def high_bias_multi_cat_unequal_distribution_poor_model():
     df['prediction'] = df['target'] + np.random.normal(loc=0, scale=20, size=num_rows)
 
     # Apply bias conditions:
-
+    biased_categories = []
     def add_biases(df, group, c1, c2, h, l, hbar, lbar):
         cat = group.lower()
         # 1. Unbiased for UTUP
@@ -322,15 +341,18 @@ def high_bias_multi_cat_unequal_distribution_poor_model():
         # 2. Target is unbiased, but prediction is biased
         biased_category_1 = f'utbp_{cat}_{c1}'
         biased_category_2 = f'utbp_{cat}_{c2}'
+
         df.loc[df[f'UTBP_{group}'] == biased_category_1, 'prediction'] *= h  # Introduce bias in prediction
         df.loc[df[f'UTBP_{group}'] == biased_category_2, 'prediction'] *= l  # Introduce bias in prediction
-
+        biased_categories.append((biased_category_1, 1, h))
+        biased_categories.append((biased_category_2, 1, l))
         # 3. Target is biased, but prediction is unbiased
         biased_category_1 = f'btup_{cat}_{c1}'
         biased_category_2 = f'btup_{cat}_{c2}'
         df.loc[df[f'BTUP_{group}'] == biased_category_1, ['target', 'prediction']] *= h  # Introduce bias in target but prediction still follows the target
         df.loc[df[f'BTUP_{group}'] == biased_category_2, ['target', 'prediction']] *= l  # Introduce bias in target but prediction still follows the target
-
+        biased_categories.append((biased_category_1, h, h))
+        biased_categories.append((biased_category_2, l, l))
         # 4. Both target and prediction are biased for BTBP
         biased_category_1 = f'btbp_{cat}_{c1}'
         biased_category_2 = f'btbp_{cat}_{c2}'
@@ -338,6 +360,8 @@ def high_bias_multi_cat_unequal_distribution_poor_model():
         df.loc[df[f'BTBP_{group}'] == biased_category_1, 'prediction'] *= lbar  # Introduce bias in prediction
         df.loc[df[f'BTBP_{group}'] == biased_category_2, 'target'] *= h  # Introduce bias in target
         df.loc[df[f'BTBP_{group}'] == biased_category_2, 'prediction'] *= hbar  # Introduce bias in prediction
+        biased_categories.append((biased_category_1, l, lbar))
+        biased_categories.append((biased_category_2, h, hbar))
 
         return df
 
@@ -352,4 +376,4 @@ def high_bias_multi_cat_unequal_distribution_poor_model():
     df = add_biases(df, "MM_O", 1, 2, 1.2, 0.85, 1.45, 0.65)
     df = add_biases(df, "MM_S", 1, 2, 1.2, 1.4, 1.45, 1.1)
 
-    return df
+    return df, biased_categories

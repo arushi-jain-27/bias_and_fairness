@@ -9,6 +9,7 @@ def weighted_avg(group):
     total_weight = group["count"].sum()
     for col in value_columns:
         d[f'weighted_{col}'] = (group[col] * group["count"]).sum() / total_weight
+    d['count'] = total_weight  # Preserve the total count
     return pd.Series(d)
 
 
@@ -32,7 +33,7 @@ def calculate_model_fairness(df: pd.DataFrame, target_feature: str, prediction_c
     df_scored = df.copy()
 
     df_count = len(df_scored)
-    print(f'Total count after protected data joins: {df_count}')
+    print(f'Total count: {df_count}')
 
     final_df_list = []
     
@@ -107,7 +108,7 @@ def calculate_model_fairness_classwise(df: pd.DataFrame, target_feature: str, pr
     return final_df
 
     
-def fair_ai_results(df, target_feature, protected_groups, prediction_col="prediction"):
+def fair_ai_results(df, protected_groups, target_feature = "target", prediction_col="prediction"):
     """
     Calculate fairness results across quantiles of the target feature
     Args:
