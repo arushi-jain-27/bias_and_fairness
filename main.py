@@ -44,7 +44,7 @@ if __name__ == "__main__":
         groups = get_protected_groups(simulation_type)
 
         # Collect FairAI results for each group
-        df_fairai = fair_ai_results(df, groups)
+        df_fairai = fair_ai_results(df, groups, prediction_cols=["prediction"], task_type="regression")
         
         # Collect DALEX results for each group
         for group in groups:

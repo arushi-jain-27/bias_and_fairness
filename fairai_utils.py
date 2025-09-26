@@ -108,33 +108,74 @@ def calculate_model_fairness_classwise(df: pd.DataFrame, target_feature: str, pr
     return final_df
 
     
-def fair_ai_results(df, protected_groups, target_feature = "target", prediction_col="prediction"):
+def fair_ai_results(df, protected_groups, target_feature="target", prediction_cols=["prediction"], 
+                   task_type="regression"):
     """
-    Calculate fairness results across quantiles of the target feature
+    Calculate fairness results across quantiles (regression) or classes (classification)
     Args:
         - df (pd.DataFrame): Input dataframe
         - target_feature (str): column name of target feature
         - protected_groups (list): List of protected group column names
-        - prediction_col (str): column name of predictions (default: "prediction")
+        - prediction_cols (list): list of prediction column names
+            * For regression: single column name, e.g., ["prediction"]
+            * For classification: probability columns, e.g.,["prob_class_0", "prob_class_1", "prob_class_2"] for classification
+        - task_type (str): "regression" or "classification" (default: "regression")
     
     Returns:
-        pd.DataFrame: Weighted fairness results across quantiles
+        pd.DataFrame: Weighted fairness results across quantiles (regression) or classes (classification)
     """
     
     df_copy = df.copy()
-    df_copy['quantile'] = pd.qcut(df_copy[target_feature], q=10, labels=False) + 1
     
     bnf_q = []
-    for i in range(1, 11):
-        quantile_df = df_copy[df_copy['quantile'] == i].copy()
-        q = calculate_model_fairness(quantile_df, target_feature, prediction_col=prediction_col, protected_groups=protected_groups)
-        q['quantile'] = f"q{i}"
-        bnf_q.append(q)
+    
+    if task_type == "regression":
+        # Original quantile-based bucketing for regression
+        if len(prediction_cols) != 1:
+            raise ValueError("For regression, prediction_cols must contain exactly one column")
+        
+        df_copy['quantile'] = pd.qcut(df_copy[target_feature], q=10, labels=False) + 1
+        
+        for i in range(1, 11):
+            quantile_df = df_copy[df_copy['quantile'] == i].copy()
+            q = calculate_model_fairness(quantile_df, target_feature, prediction_col=prediction_cols[0], protected_groups=protected_groups)
+            q['bucket'] = f"q{i}"
+            q['bucket_type'] = 'quantile'
+            bnf_q.append(q)
+            
+    elif task_type == "classification":
+        # Class-based bucketing for classification
+        unique_classes = sorted(df_copy[target_feature].unique())
+        
+        # Require one probability column per class
+        if len(prediction_cols) != len(unique_classes):
+            raise ValueError(f"For classification, prediction_cols must contain {len(unique_classes)} columns (one per class), got {len(prediction_cols)}")
+        
+        for class_label in unique_classes:
+            # Create bucket for this class (all samples where true class = class_label)
+            class_df = df_copy[df_copy[target_feature] == class_label].copy()
+            
+            # Find the probability column for this class
+            prob_col = None
+            for col in prediction_cols:
+                if str(class_label) in col:  # e.g., "prob_class_0", "prob_0", etc.
+                    prob_col = col
+                    break
+            if prob_col is None:
+                raise ValueError(f"Could not find probability column for class {class_label} in {prediction_cols}")
+                
+            q = calculate_model_fairness(class_df, target_feature, prediction_col=prob_col, protected_groups=protected_groups)
+            q['bucket'] = f"class_{class_label}"
+            q['bucket_type'] = 'class'
+            bnf_q.append(q)
+    
+    else:
+        raise ValueError(f"Unsupported task_type: {task_type}. Use 'regression' or 'classification'")
 
-    # Combine all quantile results
+    # Combine all bucket results
     bnf = pd.concat(bnf_q, ignore_index=True)
     
-    # Apply weighted averaging
+    # Apply weighted averaging across buckets for each protected group
     bnf = bnf.groupby(["Protected_Feature", "Protected_Class"]).apply(weighted_avg).reset_index()
     
     return bnf
