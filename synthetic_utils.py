@@ -1,0 +1,355 @@
+import numpy as np
+import pandas as pd
+
+
+def low_bias_single_cat_equal_distribution():
+    num_rows = 6000
+    num_groups = 3
+    protected_groups = ['UTUP', 'UTBP', 'BTUP', 'BTBP']
+    groups_utup = [f"utup_{i+1}" for i in range(num_groups)]
+    groups_utbp = [f"utbp_{i+1}" for i in range(num_groups)]
+    groups_btup = [f"btup_{i+1}" for i in range(num_groups)]
+    groups_btbp = [f"btbp_{i+1}" for i in range(num_groups)]
+
+    data = {
+        'UTUP': np.random.choice(groups_utup, num_rows),
+        'UTBP': np.random.choice(groups_utbp, num_rows),
+        'BTUP': np.random.choice(groups_btup, num_rows),
+        'BTBP': np.random.choice(groups_btbp, num_rows),
+    }
+    df = pd.DataFrame(data)
+
+    # Generate target column - normally distributed
+    df['target'] = np.random.normal(loc=50, scale=10, size=num_rows)
+    # Generate prediction column - initially close to target
+    df['prediction'] = df['target'] + np.random.normal(loc=0, scale=5, size=num_rows)
+
+    # Apply bias conditions:
+
+    # 1. Unbiased for UTUP
+    # No changes needed as both target and prediction should be unbiased.
+
+    # 2. Target is unbiased, but prediction is biased for 1 category in UTBP
+    biased_utbp_category = 'utbp_1'
+    df.loc[df['UTBP'] == biased_utbp_category, 'prediction'] *= 1.2  # Introduce bias in prediction
+
+    # 3. Target is biased, but prediction is unbiased for 1 category in BTUP
+    biased_btup_category = 'btup_2'
+    df.loc[df['BTUP'] == biased_btup_category, ['target', 'prediction']] *= 1.2  # Introduce bias in target but prediction still follows the target
+
+    # 4. Both target and prediction are biased for BTBP
+    biased_btbp_category = 'btbp_3'
+    df.loc[df['BTBP'] == biased_btbp_category, 'target'] *= 0.85  # Introduce bias in target
+    df.loc[df['BTBP'] == biased_btbp_category, 'prediction'] *= 0.75  # Introduce more bias in prediction
+
+    return df
+
+
+def high_bias_single_cat_equal_distribution():
+    num_rows = 6000
+    num_groups = 3
+    protected_groups = ['UTUP', 'UTBP', 'BTUP', 'BTBP']
+    groups_utup = [f"utup_{i+1}" for i in range(num_groups)]
+    groups_utbp = [f"utbp_{i+1}" for i in range(num_groups)]
+    groups_btup = [f"btup_{i+1}" for i in range(num_groups)]
+    groups_btbp = [f"btbp_{i+1}" for i in range(num_groups)]
+
+    data = {
+        'UTUP': np.random.choice(groups_utup, num_rows),
+        'UTBP': np.random.choice(groups_utbp, num_rows),
+        'BTUP': np.random.choice(groups_btup, num_rows),
+        'BTBP': np.random.choice(groups_btbp, num_rows),
+    }
+    df = pd.DataFrame(data)
+
+    # Generate target column - normally distributed
+    df['target'] = np.random.normal(loc=50, scale=10, size=num_rows)
+    # Generate prediction column - initially close to target
+    df['prediction'] = df['target'] + np.random.normal(loc=0, scale=5, size=num_rows)
+
+    # Apply bias conditions:
+
+    # 1. Unbiased for UTUP
+    # No changes needed as both target and prediction should be unbiased.
+
+    # 2. Target is unbiased, but prediction is biased for 1 category in UTBP
+    biased_utbp_category = 'utbp_1'
+    df.loc[df['UTBP'] == biased_utbp_category, 'prediction'] *= 1.3  # Introduce bias in prediction
+
+    # 3. Target is biased, but prediction is unbiased for 1 category in BTUP
+    biased_btup_category = 'btup_2'
+    df.loc[df['BTUP'] == biased_btup_category, ['target', 'prediction']] *= 1.3  # Introduce bias in target but prediction still follows the target
+
+    # 4. Both target and prediction are biased for BTBP
+    biased_btbp_category = 'btbp_3'
+    df.loc[df['BTBP'] == biased_btbp_category, 'target'] *= 0.75  # Introduce bias in target
+    df.loc[df['BTBP'] == biased_btbp_category, 'prediction'] *= 0.6  # Introduce more bias in prediction
+
+
+    return df
+
+
+
+def high_bias_single_cat_unequal_distribution():
+    num_rows = 6000
+    num_groups = 3
+    proportions = [0.4,0.4,0.2]
+    protected_groups = ['UTUP', 'UTBP', 'BTUP', 'BTBP']
+    groups_utup = [f"utup_{i+1}" for i in range(num_groups)]
+    groups_utbp = [f"utbp_{i+1}" for i in range(num_groups)]
+    groups_btup = [f"btup_{i+1}" for i in range(num_groups)]
+    groups_btbp = [f"btbp_{i+1}" for i in range(num_groups)]
+
+    data = {
+        'UTUP': np.random.choice(groups_utup, num_rows, proportions),
+        'UTBP': np.random.choice(groups_utbp, num_rows, proportions),
+        'BTUP': np.random.choice(groups_btup, num_rows, proportions),
+        'BTBP': np.random.choice(groups_btbp, num_rows, proportions),
+    }
+    df = pd.DataFrame(data)
+
+    # Generate target column - normally distributed
+    df['target'] = np.random.normal(loc=50, scale=10, size=num_rows)
+    # Generate prediction column - initially close to target
+    df['prediction'] = df['target'] + np.random.normal(loc=0, scale=5, size=num_rows)
+
+    # Apply bias conditions:
+
+    # 1. Unbiased for UTUP
+    # No changes needed as both target and prediction should be unbiased.
+
+    # 2. Target is unbiased, but prediction is biased for 1 category in UTBP
+    biased_utbp_category = 'utbp_1'
+    df.loc[df['UTBP'] == biased_utbp_category, 'prediction'] *= 1.3  # Introduce bias in prediction
+
+    # 3. Target is biased, but prediction is unbiased for 1 category in BTUP
+    biased_btup_category = 'btup_1'
+    df.loc[df['BTUP'] == biased_btup_category, ['target', 'prediction']] *= 1.3  # Introduce bias in target but prediction still follows the target
+
+    # 4. Both target and prediction are biased for BTBP
+    biased_btbp_category = 'btbp_1'
+    df.loc[df['BTBP'] == biased_btbp_category, 'target'] *= 0.75  # Introduce bias in target
+    df.loc[df['BTBP'] == biased_btbp_category, 'prediction'] *= 0.6  # Introduce more bias in prediction
+
+
+    return df
+
+
+
+def high_bias_multi_cat_unequal_distribution():
+
+
+    num_rows = 60000
+    num_groups = 4
+    proportions = [0.25,0.25,0.45, 0.05]
+    protected_groups = ['UTUP', 'UTBP_ML_O', 'BTUP_ML_O', 'BTBP_ML_O', 'UTBP_MH_O', 'BTUP_MH_O', 'BTBP_MH_O', 'UTBP_ML_S', 'BTUP_ML_S', 'BTBP_ML_S', 'UTBP_MH_S',  'BTUP_MH_S', 'BTBP_MH_S', 'UTBP_LH_O', 'BTUP_LH_O', 'BTBP_LH_O', 'UTBP_LH_S', 'BTUP_LH_S', 'BTBP_LH_S', 'UTBP_MM_O', 'BTUP_MM_O', 'BTBP_MM_O', 'UTBP_MM_S', 'BTUP_MM_S', 'BTBP_MM_S']
+    groups_utup = [f"utup_{i+1}" for i in range(num_groups)]
+    groups_utbp_ml_o = [f"utbp_ml_o_{i+1}" for i in range(num_groups)]
+    groups_btup_ml_o = [f"btup_ml_o_{i+1}" for i in range(num_groups)]
+    groups_btbp_ml_o = [f"btbp_ml_o_{i+1}" for i in range(num_groups)]
+    groups_utbp_mh_o = [f"utbp_mh_o_{i+1}" for i in range(num_groups)]
+    groups_btup_mh_o = [f"btup_mh_o_{i+1}" for i in range(num_groups)]
+    groups_btbp_mh_o = [f"btbp_mh_o_{i+1}" for i in range(num_groups)]
+    groups_utbp_ml_s = [f"utbp_ml_s_{i+1}" for i in range(num_groups)]
+    groups_btup_ml_s = [f"btup_ml_s_{i+1}" for i in range(num_groups)]
+    groups_btbp_ml_s = [f"btbp_ml_s_{i+1}" for i in range(num_groups)]
+    groups_utbp_mh_s = [f"utbp_mh_s_{i+1}" for i in range(num_groups)]
+    groups_btup_mh_s = [f"btup_mh_s_{i+1}" for i in range(num_groups)]
+    groups_btbp_mh_s = [f"btbp_mh_s_{i+1}" for i in range(num_groups)]
+    groups_utbp_lh_o = [f"utbp_lh_o_{i+1}" for i in range(num_groups)]
+    groups_btup_lh_o = [f"btup_lh_o_{i+1}" for i in range(num_groups)]
+    groups_btbp_lh_o = [f"btbp_lh_o_{i+1}" for i in range(num_groups)]
+    groups_utbp_lh_s = [f"utbp_lh_s_{i+1}" for i in range(num_groups)]
+    groups_btup_lh_s = [f"btup_lh_s_{i+1}" for i in range(num_groups)]
+    groups_btbp_lh_s = [f"btbp_lh_s_{i+1}" for i in range(num_groups)]
+    groups_utbp_mm_o = [f"utbp_mm_o_{i+1}" for i in range(num_groups)]
+    groups_btup_mm_o = [f"btup_mm_o_{i+1}" for i in range(num_groups)]
+    groups_btbp_mm_o = [f"btbp_mm_o_{i+1}" for i in range(num_groups)]
+    groups_utbp_mm_s = [f"utbp_mm_s_{i+1}" for i in range(num_groups)]
+    groups_btup_mm_s = [f"btup_mm_s_{i+1}" for i in range(num_groups)]
+    groups_btbp_mm_s = [f"btbp_mm_s_{i+1}" for i in range(num_groups)]
+
+    data = {
+        'UTUP': np.random.choice(groups_utup, num_rows, proportions),
+        'UTBP_ML_O': np.random.choice(groups_utbp_ml_o, num_rows, proportions),
+        'BTUP_ML_O': np.random.choice(groups_btup_ml_o, num_rows, proportions),
+        'BTBP_ML_O': np.random.choice(groups_btbp_ml_o, num_rows, proportions),
+        'UTBP_ML_S': np.random.choice(groups_utbp_ml_s, num_rows, proportions),
+        'BTUP_ML_S': np.random.choice(groups_btup_ml_s, num_rows, proportions),
+        'BTBP_ML_S': np.random.choice(groups_btbp_ml_s, num_rows, proportions),
+        'UTBP_MH_O': np.random.choice(groups_utbp_mh_o, num_rows, proportions),
+        'BTUP_MH_O': np.random.choice(groups_btup_mh_o, num_rows, proportions),
+        'BTBP_MH_O': np.random.choice(groups_btbp_mh_o, num_rows, proportions),
+        'UTBP_MH_S': np.random.choice(groups_utbp_mh_s, num_rows, proportions),
+        'BTUP_MH_S': np.random.choice(groups_btup_mh_s, num_rows, proportions),
+        'BTBP_MH_S': np.random.choice(groups_btbp_mh_s, num_rows, proportions),
+        'UTBP_LH_O': np.random.choice(groups_utbp_lh_o, num_rows, proportions),
+        'BTUP_LH_O': np.random.choice(groups_btup_lh_o, num_rows, proportions),
+        'BTBP_LH_O': np.random.choice(groups_btbp_lh_o, num_rows, proportions),
+        'UTBP_LH_S': np.random.choice(groups_utbp_lh_s, num_rows, proportions),
+        'BTUP_LH_S': np.random.choice(groups_btup_lh_s, num_rows, proportions),
+        'BTBP_LH_S': np.random.choice(groups_btbp_lh_s, num_rows, proportions),
+        'UTBP_MM_O': np.random.choice(groups_utbp_mm_o, num_rows, proportions),
+        'BTUP_MM_O': np.random.choice(groups_btup_mm_o, num_rows, proportions),
+        'BTBP_MM_O': np.random.choice(groups_btbp_mm_o, num_rows, proportions),
+        'UTBP_MM_S': np.random.choice(groups_utbp_mm_s, num_rows, proportions),
+        'BTUP_MM_S': np.random.choice(groups_btup_mm_s, num_rows, proportions),
+        'BTBP_MM_S': np.random.choice(groups_btbp_mm_s, num_rows, proportions),
+    }
+    df = pd.DataFrame(data)
+
+    # Generate target column - normally distributed
+    df['target'] = np.random.normal(loc=50, scale=10, size=num_rows)
+    # Generate prediction column - initially close to target
+    df['prediction'] = df['target'] + np.random.normal(loc=0, scale=5, size=num_rows)
+
+    # Apply bias conditions:
+
+    def add_biases(df, group, c1, c2, h, l, hbar, lbar):
+        cat = group.lower()
+        # 1. Unbiased for UTUP
+        # No changes needed as both target and prediction should be unbiased.
+
+        # 2. Target is unbiased, but prediction is biased
+        biased_category_1 = f'utbp_{cat}_{c1}'
+        biased_category_2 = f'utbp_{cat}_{c2}'
+        df.loc[df[f'UTBP_{group}'] == biased_category_1, 'prediction'] *= h  # Introduce bias in prediction
+        df.loc[df[f'UTBP_{group}'] == biased_category_2, 'prediction'] *= l  # Introduce bias in prediction
+
+        # 3. Target is biased, but prediction is unbiased
+        biased_category_1 = f'btup_{cat}_{c1}'
+        biased_category_2 = f'btup_{cat}_{c2}'
+        df.loc[df[f'BTUP_{group}'] == biased_category_1, ['target', 'prediction']] *= h  # Introduce bias in target but prediction still follows the target
+        df.loc[df[f'BTUP_{group}'] == biased_category_2, ['target', 'prediction']] *= l  # Introduce bias in target but prediction still follows the target
+
+        # 4. Both target and prediction are biased for BTBP
+        biased_category_1 = f'btbp_{cat}_{c1}'
+        biased_category_2 = f'btbp_{cat}_{c2}'
+        df.loc[df[f'BTBP_{group}'] == biased_category_1, 'target'] *= l  # Introduce bias in prediction
+        df.loc[df[f'BTBP_{group}'] == biased_category_1, 'prediction'] *= lbar  # Introduce bias in prediction
+        df.loc[df[f'BTBP_{group}'] == biased_category_2, 'target'] *= h  # Introduce bias in prediction
+        df.loc[df[f'BTBP_{group}'] == biased_category_2, 'prediction'] *= hbar  # Introduce bias in prediction
+
+        return df
+
+
+
+    df = add_biases(df, "ML_O", 1, 4, 1.2, 0.85, 1.45, 0.65)
+    df = add_biases(df, "ML_S", 1, 4, 1.2, 1.4, 1.45, 1.1)
+    df = add_biases(df, "MH_O", 1, 3, 1.2, 0.85, 1.45, 0.65)
+    df = add_biases(df, "MH_S", 1, 3, 1.2, 1.4, 1.45, 1.1)
+    df = add_biases(df, "LH_O", 3, 4, 1.2, 0.85, 1.45, 0.65)
+    df = add_biases(df, "LH_S", 3, 4, 1.2, 1.4, 1.45, 1.1)
+    df = add_biases(df, "MM_O", 1, 2, 1.2, 0.85, 1.45, 0.65)
+    df = add_biases(df, "MM_S", 1, 2, 1.2, 1.4, 1.45, 1.1)
+    return df
+
+
+
+
+def high_bias_multi_cat_unequal_distribution_poor_model():
+    num_rows = 60000
+    num_groups = 4
+    proportions = [0.25,0.25,0.45, 0.05]
+    protected_groups = ['UTUP', 'UTBP_ML_O', 'BTUP_ML_O', 'BTBP_ML_O', 'UTBP_MH_O', 'BTUP_MH_O', 'BTBP_MH_O', 'UTBP_ML_S', 'BTUP_ML_S', 'BTBP_ML_S', 'UTBP_MH_S',  'BTUP_MH_S', 'BTBP_MH_S', 'UTBP_LH_O', 'BTUP_LH_O', 'BTBP_LH_O', 'UTBP_LH_S', 'BTUP_LH_S', 'BTBP_LH_S', 'UTBP_MM_O', 'BTUP_MM_O', 'BTBP_MM_O', 'UTBP_MM_S', 'BTUP_MM_S', 'BTBP_MM_S']
+    groups_utup = [f"utup_{i+1}" for i in range(num_groups)]
+    groups_utbp_ml_o = [f"utbp_ml_o_{i+1}" for i in range(num_groups)]
+    groups_btup_ml_o = [f"btup_ml_o_{i+1}" for i in range(num_groups)]
+    groups_btbp_ml_o = [f"btbp_ml_o_{i+1}" for i in range(num_groups)]
+    groups_utbp_mh_o = [f"utbp_mh_o_{i+1}" for i in range(num_groups)]
+    groups_btup_mh_o = [f"btup_mh_o_{i+1}" for i in range(num_groups)]
+    groups_btbp_mh_o = [f"btbp_mh_o_{i+1}" for i in range(num_groups)]
+    groups_utbp_ml_s = [f"utbp_ml_s_{i+1}" for i in range(num_groups)]
+    groups_btup_ml_s = [f"btup_ml_s_{i+1}" for i in range(num_groups)]
+    groups_btbp_ml_s = [f"btbp_ml_s_{i+1}" for i in range(num_groups)]
+    groups_utbp_mh_s = [f"utbp_mh_s_{i+1}" for i in range(num_groups)]
+    groups_btup_mh_s = [f"btup_mh_s_{i+1}" for i in range(num_groups)]
+    groups_btbp_mh_s = [f"btbp_mh_s_{i+1}" for i in range(num_groups)]
+    groups_utbp_lh_o = [f"utbp_lh_o_{i+1}" for i in range(num_groups)]
+    groups_btup_lh_o = [f"btup_lh_o_{i+1}" for i in range(num_groups)]
+    groups_btbp_lh_o = [f"btbp_lh_o_{i+1}" for i in range(num_groups)]
+    groups_utbp_lh_s = [f"utbp_lh_s_{i+1}" for i in range(num_groups)]
+    groups_btup_lh_s = [f"btup_lh_s_{i+1}" for i in range(num_groups)]
+    groups_btbp_lh_s = [f"btbp_lh_s_{i+1}" for i in range(num_groups)]
+    groups_utbp_mm_o = [f"utbp_mm_o_{i+1}" for i in range(num_groups)]
+    groups_btup_mm_o = [f"btup_mm_o_{i+1}" for i in range(num_groups)]
+    groups_btbp_mm_o = [f"btbp_mm_o_{i+1}" for i in range(num_groups)]
+    groups_utbp_mm_s = [f"utbp_mm_s_{i+1}" for i in range(num_groups)]
+    groups_btup_mm_s = [f"btup_mm_s_{i+1}" for i in range(num_groups)]
+    groups_btbp_mm_s = [f"btbp_mm_s_{i+1}" for i in range(num_groups)]
+
+    data = {
+        'UTUP': np.random.choice(groups_utup, num_rows, proportions),
+        'UTBP_ML_O': np.random.choice(groups_utbp_ml_o, num_rows, proportions),
+        'BTUP_ML_O': np.random.choice(groups_btup_ml_o, num_rows, proportions),
+        'BTBP_ML_O': np.random.choice(groups_btbp_ml_o, num_rows, proportions),
+        'UTBP_ML_S': np.random.choice(groups_utbp_ml_s, num_rows, proportions),
+        'BTUP_ML_S': np.random.choice(groups_btup_ml_s, num_rows, proportions),
+        'BTBP_ML_S': np.random.choice(groups_btbp_ml_s, num_rows, proportions),
+        'UTBP_MH_O': np.random.choice(groups_utbp_mh_o, num_rows, proportions),
+        'BTUP_MH_O': np.random.choice(groups_btup_mh_o, num_rows, proportions),
+        'BTBP_MH_O': np.random.choice(groups_btbp_mh_o, num_rows, proportions),
+        'UTBP_MH_S': np.random.choice(groups_utbp_mh_s, num_rows, proportions),
+        'BTUP_MH_S': np.random.choice(groups_btup_mh_s, num_rows, proportions),
+        'BTBP_MH_S': np.random.choice(groups_btbp_mh_s, num_rows, proportions),
+        'UTBP_LH_O': np.random.choice(groups_utbp_lh_o, num_rows, proportions),
+        'BTUP_LH_O': np.random.choice(groups_btup_lh_o, num_rows, proportions),
+        'BTBP_LH_O': np.random.choice(groups_btbp_lh_o, num_rows, proportions),
+        'UTBP_LH_S': np.random.choice(groups_utbp_lh_s, num_rows, proportions),
+        'BTUP_LH_S': np.random.choice(groups_btup_lh_s, num_rows, proportions),
+        'BTBP_LH_S': np.random.choice(groups_btbp_lh_s, num_rows, proportions),
+        'UTBP_MM_O': np.random.choice(groups_utbp_mm_o, num_rows, proportions),
+        'BTUP_MM_O': np.random.choice(groups_btup_mm_o, num_rows, proportions),
+        'BTBP_MM_O': np.random.choice(groups_btbp_mm_o, num_rows, proportions),
+        'UTBP_MM_S': np.random.choice(groups_utbp_mm_s, num_rows, proportions),
+        'BTUP_MM_S': np.random.choice(groups_btup_mm_s, num_rows, proportions),
+        'BTBP_MM_S': np.random.choice(groups_btbp_mm_s, num_rows, proportions),
+    }
+    df = pd.DataFrame(data)
+
+    # Generate target column - normally distributed
+    df['target'] = np.random.normal(loc=50, scale=10, size=num_rows)
+    # Generate prediction column - initially close to target
+    df['prediction'] = df['target'] + np.random.normal(loc=0, scale=20, size=num_rows)
+
+    # Apply bias conditions:
+
+    def add_biases(df, group, c1, c2, h, l, hbar, lbar):
+        cat = group.lower()
+        # 1. Unbiased for UTUP
+        # No changes needed as both target and prediction should be unbiased.
+
+        # 2. Target is unbiased, but prediction is biased
+        biased_category_1 = f'utbp_{cat}_{c1}'
+        biased_category_2 = f'utbp_{cat}_{c2}'
+        df.loc[df[f'UTBP_{group}'] == biased_category_1, 'prediction'] *= h  # Introduce bias in prediction
+        df.loc[df[f'UTBP_{group}'] == biased_category_2, 'prediction'] *= l  # Introduce bias in prediction
+
+        # 3. Target is biased, but prediction is unbiased
+        biased_category_1 = f'btup_{cat}_{c1}'
+        biased_category_2 = f'btup_{cat}_{c2}'
+        df.loc[df[f'BTUP_{group}'] == biased_category_1, ['target', 'prediction']] *= h  # Introduce bias in target but prediction still follows the target
+        df.loc[df[f'BTUP_{group}'] == biased_category_2, ['target', 'prediction']] *= l  # Introduce bias in target but prediction still follows the target
+
+        # 4. Both target and prediction are biased for BTBP
+        biased_category_1 = f'btbp_{cat}_{c1}'
+        biased_category_2 = f'btbp_{cat}_{c2}'
+        df.loc[df[f'BTBP_{group}'] == biased_category_1, 'target'] *= l  # Introduce bias in target
+        df.loc[df[f'BTBP_{group}'] == biased_category_1, 'prediction'] *= lbar  # Introduce bias in prediction
+        df.loc[df[f'BTBP_{group}'] == biased_category_2, 'target'] *= h  # Introduce bias in target
+        df.loc[df[f'BTBP_{group}'] == biased_category_2, 'prediction'] *= hbar  # Introduce bias in prediction
+
+        return df
+
+
+
+    df = add_biases(df, "ML_O", 1, 4, 1.2, 0.85, 1.45, 0.65)
+    df = add_biases(df, "ML_S", 1, 4, 1.2, 1.4, 1.45, 1.1)
+    df = add_biases(df, "MH_O", 1, 3, 1.2, 0.85, 1.45, 0.65)
+    df = add_biases(df, "MH_S", 1, 3, 1.2, 1.4, 1.45, 1.1)
+    df = add_biases(df, "LH_O", 3, 4, 1.2, 0.85, 1.45, 0.65)
+    df = add_biases(df, "LH_S", 3, 4, 1.2, 1.4, 1.45, 1.1)
+    df = add_biases(df, "MM_O", 1, 2, 1.2, 0.85, 1.45, 0.65)
+    df = add_biases(df, "MM_S", 1, 2, 1.2, 1.4, 1.45, 1.1)
+
+    return df
