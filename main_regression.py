@@ -1,8 +1,7 @@
 # Import all functions from utility modules
 from fairai_utils import *
 from dalex_utils import *
-from synthetic_utils import *
-import xlsxwriter
+from synthetic_reg_utils import *
 
 
 def choose_simulation(simulation_type):
