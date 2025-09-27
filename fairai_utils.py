@@ -89,11 +89,12 @@ def calculate_model_fairness_classwise(df: pd.DataFrame, target_feature: str, pr
     grouped_df['otheravg_target'] = (sum_targets - grouped_df['target']) / (sum_counts - grouped_df['count'])
     grouped_df['otheravg_pred'] = (sum_preds - grouped_df['predicted']) / (sum_counts - grouped_df['count'])
     
-    # Calculate fairness ratios (taking the smaller ratio to ensure values <= 1)
+    # Calculate fairness ratios
     def calculate_fairness_ratio(avg_col, other_avg_col):
-        ratio1 = avg_col / other_avg_col
-        ratio2 = other_avg_col / avg_col
-        return np.where(np.abs(ratio1) < np.abs(ratio2), ratio1, ratio2)
+        # ratio1 = avg_col / other_avg_col
+        # ratio2 = other_avg_col / avg_col
+        # return np.where(np.abs(ratio1) < np.abs(ratio2), ratio1, ratio2)
+        return avg_col / other_avg_col
     
     # Calculate prediction fairness using ratio-based approach
     grouped_df['Fairness_pred'] = calculate_fairness_ratio(grouped_df['average_pred'], grouped_df['otheravg_pred'])
