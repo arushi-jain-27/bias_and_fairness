@@ -2,19 +2,19 @@ import numpy as np
 import pandas as pd
 
 
-def choose_simulation(simulation_type):
+def choose_simulation(simulation_type, seed=0):
     if simulation_type == "low_bias_single_cat_equal_distribution":
-        return low_bias_single_cat_equal_distribution()
+        return low_bias_single_cat_equal_distribution(seed)
     elif simulation_type == "high_bias_single_cat_equal_distribution":
-        return high_bias_single_cat_equal_distribution()
+        return high_bias_single_cat_equal_distribution(seed)
     elif simulation_type == "high_bias_single_cat_unequal_distribution":
-        return high_bias_single_cat_unequal_distribution()
+        return high_bias_single_cat_unequal_distribution(seed)
     elif simulation_type == "high_bias_multiple_cats_unequal_distribution":
-        return high_bias_multiple_cats_unequal_distribution()
+        return high_bias_multiple_cats_unequal_distribution(seed)
     elif simulation_type == "high_bias_multiple_cats_unequal_distribution_poor_model":
-        return high_bias_multiple_cats_unequal_distribution_poor_model()
+        return high_bias_multiple_cats_unequal_distribution_poor_model(seed)
 
-def low_bias_single_cat_equal_distribution():
+def low_bias_single_cat_equal_distribution(seed = 0):
     num_rows = 6000
     num_groups = 3
     protected_groups = ['UTUP', 'UTBP', 'BTUP', 'BTBP']
@@ -23,18 +23,20 @@ def low_bias_single_cat_equal_distribution():
     groups_btup = [f"btup_{i+1}" for i in range(num_groups)]
     groups_btbp = [f"btbp_{i+1}" for i in range(num_groups)]
 
+    rng = np.random.default_rng(seed)
+
     data = {
-        'UTUP': np.random.choice(groups_utup, num_rows),
-        'UTBP': np.random.choice(groups_utbp, num_rows),
-        'BTUP': np.random.choice(groups_btup, num_rows),
-        'BTBP': np.random.choice(groups_btbp, num_rows),
+        'UTUP': rng.choice(groups_utup, num_rows),
+        'UTBP': rng.choice(groups_utbp, num_rows),
+        'BTUP': rng.choice(groups_btup, num_rows),
+        'BTBP': rng.choice(groups_btbp, num_rows),
     }
     df = pd.DataFrame(data)
 
     # Generate target column - normally distributed
-    df['target'] = np.random.normal(loc=50, scale=10, size=num_rows)
+    df['target'] = rng.normal(loc=50, scale=10, size=num_rows)
     # Generate prediction column - initially close to target
-    df['prediction'] = df['target'] + np.random.normal(loc=0, scale=5, size=num_rows)
+    df['prediction'] = df['target'] + rng.normal(loc=0, scale=5, size=num_rows)
 
     # Apply bias conditions:
 
@@ -57,7 +59,7 @@ def low_bias_single_cat_equal_distribution():
     return df, [(biased_utbp_category, 1, 1.2), (biased_btup_category, 1.2, 1.2), (biased_btbp_category, 0.85, 0.75)]
 
 
-def high_bias_single_cat_equal_distribution():
+def high_bias_single_cat_equal_distribution(seed = 0):
     num_rows = 6000
     num_groups = 3
     protected_groups = ['UTUP', 'UTBP', 'BTUP', 'BTBP']
@@ -66,18 +68,20 @@ def high_bias_single_cat_equal_distribution():
     groups_btup = [f"btup_{i+1}" for i in range(num_groups)]
     groups_btbp = [f"btbp_{i+1}" for i in range(num_groups)]
 
+    rng = np.random.default_rng(seed)
+
     data = {
-        'UTUP': np.random.choice(groups_utup, num_rows),
-        'UTBP': np.random.choice(groups_utbp, num_rows),
-        'BTUP': np.random.choice(groups_btup, num_rows),
-        'BTBP': np.random.choice(groups_btbp, num_rows),
+        'UTUP': rng.choice(groups_utup, num_rows),
+        'UTBP': rng.choice(groups_utbp, num_rows),
+        'BTUP': rng.choice(groups_btup, num_rows),
+        'BTBP': rng.choice(groups_btbp, num_rows),
     }
     df = pd.DataFrame(data)
 
     # Generate target column - normally distributed
-    df['target'] = np.random.normal(loc=50, scale=10, size=num_rows)
+    df['target'] = rng.normal(loc=50, scale=10, size=num_rows)
     # Generate prediction column - initially close to target
-    df['prediction'] = df['target'] + np.random.normal(loc=0, scale=5, size=num_rows)
+    df['prediction'] = df['target'] + rng.normal(loc=0, scale=5, size=num_rows)
 
     # Apply bias conditions:
 
@@ -102,7 +106,7 @@ def high_bias_single_cat_equal_distribution():
 
 
 
-def high_bias_single_cat_unequal_distribution():
+def high_bias_single_cat_unequal_distribution(seed = 0):
     num_rows = 6000
     num_groups = 3
     proportions = [0.4,0.4,0.2]
@@ -112,18 +116,20 @@ def high_bias_single_cat_unequal_distribution():
     groups_btup = [f"btup_{i+1}" for i in range(num_groups)]
     groups_btbp = [f"btbp_{i+1}" for i in range(num_groups)]
 
+    rng = np.random.default_rng(seed)
+
     data = {
-        'UTUP': np.random.choice(groups_utup, num_rows, p=proportions),
-        'UTBP': np.random.choice(groups_utbp, num_rows, p=proportions),
-        'BTUP': np.random.choice(groups_btup, num_rows, p=proportions),
-        'BTBP': np.random.choice(groups_btbp, num_rows, p=proportions),
+        'UTUP': rng.choice(groups_utup, num_rows, p=proportions),
+        'UTBP': rng.choice(groups_utbp, num_rows, p=proportions),
+        'BTUP': rng.choice(groups_btup, num_rows, p=proportions),
+        'BTBP': rng.choice(groups_btbp, num_rows, p=proportions),
     }
     df = pd.DataFrame(data)
 
     # Generate target column - normally distributed
-    df['target'] = np.random.normal(loc=50, scale=10, size=num_rows)
+    df['target'] = rng.normal(loc=50, scale=10, size=num_rows)
     # Generate prediction column - initially close to target
-    df['prediction'] = df['target'] + np.random.normal(loc=0, scale=5, size=num_rows)
+    df['prediction'] = df['target'] + rng.normal(loc=0, scale=5, size=num_rows)
 
     # Apply bias conditions:
 
@@ -148,7 +154,7 @@ def high_bias_single_cat_unequal_distribution():
 
 
 
-def high_bias_multiple_cats_unequal_distribution():
+def high_bias_multiple_cats_unequal_distribution(seed = 0):
 
 
     num_rows = 60000
@@ -181,39 +187,41 @@ def high_bias_multiple_cats_unequal_distribution():
     groups_btup_mm_s = [f"btup_mm_s_{i+1}" for i in range(num_groups)]
     groups_btbp_mm_s = [f"btbp_mm_s_{i+1}" for i in range(num_groups)]
 
+    rng = np.random.default_rng(seed)
+
     data = {
-        'UTUP': np.random.choice(groups_utup, num_rows, p=proportions),
-        'UTBP_ML_O': np.random.choice(groups_utbp_ml_o, num_rows, p=proportions),
-        'BTUP_ML_O': np.random.choice(groups_btup_ml_o, num_rows, p=proportions),
-        'BTBP_ML_O': np.random.choice(groups_btbp_ml_o, num_rows, p=proportions),
-        'UTBP_ML_S': np.random.choice(groups_utbp_ml_s, num_rows, p=proportions),
-        'BTUP_ML_S': np.random.choice(groups_btup_ml_s, num_rows, p=proportions),
-        'BTBP_ML_S': np.random.choice(groups_btbp_ml_s, num_rows, p=proportions),
-        'UTBP_MH_O': np.random.choice(groups_utbp_mh_o, num_rows, p=proportions),
-        'BTUP_MH_O': np.random.choice(groups_btup_mh_o, num_rows, p=proportions),
-        'BTBP_MH_O': np.random.choice(groups_btbp_mh_o, num_rows, p=proportions),
-        'UTBP_MH_S': np.random.choice(groups_utbp_mh_s, num_rows, p=proportions),
-        'BTUP_MH_S': np.random.choice(groups_btup_mh_s, num_rows, p=proportions),
-        'BTBP_MH_S': np.random.choice(groups_btbp_mh_s, num_rows, p=proportions),
-        'UTBP_LH_O': np.random.choice(groups_utbp_lh_o, num_rows, p=proportions),
-        'BTUP_LH_O': np.random.choice(groups_btup_lh_o, num_rows, p=proportions),
-        'BTBP_LH_O': np.random.choice(groups_btbp_lh_o, num_rows, p=proportions),
-        'UTBP_LH_S': np.random.choice(groups_utbp_lh_s, num_rows, p=proportions),
-        'BTUP_LH_S': np.random.choice(groups_btup_lh_s, num_rows, p=proportions),
-        'BTBP_LH_S': np.random.choice(groups_btbp_lh_s, num_rows, p=proportions),
-        'UTBP_MM_O': np.random.choice(groups_utbp_mm_o, num_rows, p=proportions),
-        'BTUP_MM_O': np.random.choice(groups_btup_mm_o, num_rows, p=proportions),
-        'BTBP_MM_O': np.random.choice(groups_btbp_mm_o, num_rows, p=proportions),
-        'UTBP_MM_S': np.random.choice(groups_utbp_mm_s, num_rows, p=proportions),
-        'BTUP_MM_S': np.random.choice(groups_btup_mm_s, num_rows, p=proportions),
-        'BTBP_MM_S': np.random.choice(groups_btbp_mm_s, num_rows, p=proportions),
+        'UTUP': rng.choice(groups_utup, num_rows, p=proportions),
+        'UTBP_ML_O': rng.choice(groups_utbp_ml_o, num_rows, p=proportions),
+        'BTUP_ML_O': rng.choice(groups_btup_ml_o, num_rows, p=proportions),
+        'BTBP_ML_O': rng.choice(groups_btbp_ml_o, num_rows, p=proportions),
+        'UTBP_ML_S': rng.choice(groups_utbp_ml_s, num_rows, p=proportions),
+        'BTUP_ML_S': rng.choice(groups_btup_ml_s, num_rows, p=proportions),
+        'BTBP_ML_S': rng.choice(groups_btbp_ml_s, num_rows, p=proportions),
+        'UTBP_MH_O': rng.choice(groups_utbp_mh_o, num_rows, p=proportions),
+        'BTUP_MH_O': rng.choice(groups_btup_mh_o, num_rows, p=proportions),
+        'BTBP_MH_O': rng.choice(groups_btbp_mh_o, num_rows, p=proportions),
+        'UTBP_MH_S': rng.choice(groups_utbp_mh_s, num_rows, p=proportions),
+        'BTUP_MH_S': rng.choice(groups_btup_mh_s, num_rows, p=proportions),
+        'BTBP_MH_S': rng.choice(groups_btbp_mh_s, num_rows, p=proportions),
+        'UTBP_LH_O': rng.choice(groups_utbp_lh_o, num_rows, p=proportions),
+        'BTUP_LH_O': rng.choice(groups_btup_lh_o, num_rows, p=proportions),
+        'BTBP_LH_O': rng.choice(groups_btbp_lh_o, num_rows, p=proportions),
+        'UTBP_LH_S': rng.choice(groups_utbp_lh_s, num_rows, p=proportions),
+        'BTUP_LH_S': rng.choice(groups_btup_lh_s, num_rows, p=proportions),
+        'BTBP_LH_S': rng.choice(groups_btbp_lh_s, num_rows, p=proportions),
+        'UTBP_MM_O': rng.choice(groups_utbp_mm_o, num_rows, p=proportions),
+        'BTUP_MM_O': rng.choice(groups_btup_mm_o, num_rows, p=proportions),
+        'BTBP_MM_O': rng.choice(groups_btbp_mm_o, num_rows, p=proportions),
+        'UTBP_MM_S': rng.choice(groups_utbp_mm_s, num_rows, p=proportions),
+        'BTUP_MM_S': rng.choice(groups_btup_mm_s, num_rows, p=proportions),
+        'BTBP_MM_S': rng.choice(groups_btbp_mm_s, num_rows, p=proportions),
     }
     df = pd.DataFrame(data)
 
     # Generate target column - normally distributed
-    df['target'] = np.random.normal(loc=50, scale=10, size=num_rows)
+    df['target'] = rng.normal(loc=50, scale=10, size=num_rows)
     # Generate prediction column - initially close to target
-    df['prediction'] = df['target'] + np.random.normal(loc=0, scale=5, size=num_rows)
+    df['prediction'] = df['target'] + rng.normal(loc=0, scale=5, size=num_rows)
 
     # Apply bias conditions:
     biased_categories = []
@@ -266,7 +274,7 @@ def high_bias_multiple_cats_unequal_distribution():
 
 
 
-def high_bias_multiple_cats_unequal_distribution_poor_model():
+def high_bias_multiple_cats_unequal_distribution_poor_model(seed = 0):
     num_rows = 60000
     num_groups = 4
     proportions = [0.25,0.25,0.45, 0.05]
@@ -297,39 +305,41 @@ def high_bias_multiple_cats_unequal_distribution_poor_model():
     groups_btup_mm_s = [f"btup_mm_s_{i+1}" for i in range(num_groups)]
     groups_btbp_mm_s = [f"btbp_mm_s_{i+1}" for i in range(num_groups)]
 
+    rng = np.random.default_rng(seed)
+
     data = {
-        'UTUP': np.random.choice(groups_utup, num_rows, p=proportions),
-        'UTBP_ML_O': np.random.choice(groups_utbp_ml_o, num_rows, p=proportions),
-        'BTUP_ML_O': np.random.choice(groups_btup_ml_o, num_rows, p=proportions),
-        'BTBP_ML_O': np.random.choice(groups_btbp_ml_o, num_rows, p=proportions),
-        'UTBP_ML_S': np.random.choice(groups_utbp_ml_s, num_rows, p=proportions),
-        'BTUP_ML_S': np.random.choice(groups_btup_ml_s, num_rows, p=proportions),
-        'BTBP_ML_S': np.random.choice(groups_btbp_ml_s, num_rows, p=proportions),
-        'UTBP_MH_O': np.random.choice(groups_utbp_mh_o, num_rows, p=proportions),
-        'BTUP_MH_O': np.random.choice(groups_btup_mh_o, num_rows, p=proportions),
-        'BTBP_MH_O': np.random.choice(groups_btbp_mh_o, num_rows, p=proportions),
-        'UTBP_MH_S': np.random.choice(groups_utbp_mh_s, num_rows, p=proportions),
-        'BTUP_MH_S': np.random.choice(groups_btup_mh_s, num_rows, p=proportions),
-        'BTBP_MH_S': np.random.choice(groups_btbp_mh_s, num_rows, p=proportions),
-        'UTBP_LH_O': np.random.choice(groups_utbp_lh_o, num_rows, p=proportions),
-        'BTUP_LH_O': np.random.choice(groups_btup_lh_o, num_rows, p=proportions),
-        'BTBP_LH_O': np.random.choice(groups_btbp_lh_o, num_rows, p=proportions),
-        'UTBP_LH_S': np.random.choice(groups_utbp_lh_s, num_rows, p=proportions),
-        'BTUP_LH_S': np.random.choice(groups_btup_lh_s, num_rows, p=proportions),
-        'BTBP_LH_S': np.random.choice(groups_btbp_lh_s, num_rows, p=proportions),
-        'UTBP_MM_O': np.random.choice(groups_utbp_mm_o, num_rows, p=proportions),
-        'BTUP_MM_O': np.random.choice(groups_btup_mm_o, num_rows, p=proportions),
-        'BTBP_MM_O': np.random.choice(groups_btbp_mm_o, num_rows, p=proportions),
-        'UTBP_MM_S': np.random.choice(groups_utbp_mm_s, num_rows, p=proportions),
-        'BTUP_MM_S': np.random.choice(groups_btup_mm_s, num_rows, p=proportions),
-        'BTBP_MM_S': np.random.choice(groups_btbp_mm_s, num_rows, p=proportions),
+        'UTUP': rng.choice(groups_utup, num_rows, p=proportions),
+        'UTBP_ML_O': rng.choice(groups_utbp_ml_o, num_rows, p=proportions),
+        'BTUP_ML_O': rng.choice(groups_btup_ml_o, num_rows, p=proportions),
+        'BTBP_ML_O': rng.choice(groups_btbp_ml_o, num_rows, p=proportions),
+        'UTBP_ML_S': rng.choice(groups_utbp_ml_s, num_rows, p=proportions),
+        'BTUP_ML_S': rng.choice(groups_btup_ml_s, num_rows, p=proportions),
+        'BTBP_ML_S': rng.choice(groups_btbp_ml_s, num_rows, p=proportions),
+        'UTBP_MH_O': rng.choice(groups_utbp_mh_o, num_rows, p=proportions),
+        'BTUP_MH_O': rng.choice(groups_btup_mh_o, num_rows, p=proportions),
+        'BTBP_MH_O': rng.choice(groups_btbp_mh_o, num_rows, p=proportions),
+        'UTBP_MH_S': rng.choice(groups_utbp_mh_s, num_rows, p=proportions),
+        'BTUP_MH_S': rng.choice(groups_btup_mh_s, num_rows, p=proportions),
+        'BTBP_MH_S': rng.choice(groups_btbp_mh_s, num_rows, p=proportions),
+        'UTBP_LH_O': rng.choice(groups_utbp_lh_o, num_rows, p=proportions),
+        'BTUP_LH_O': rng.choice(groups_btup_lh_o, num_rows, p=proportions),
+        'BTBP_LH_O': rng.choice(groups_btbp_lh_o, num_rows, p=proportions),
+        'UTBP_LH_S': rng.choice(groups_utbp_lh_s, num_rows, p=proportions),
+        'BTUP_LH_S': rng.choice(groups_btup_lh_s, num_rows, p=proportions),
+        'BTBP_LH_S': rng.choice(groups_btbp_lh_s, num_rows, p=proportions),
+        'UTBP_MM_O': rng.choice(groups_utbp_mm_o, num_rows, p=proportions),
+        'BTUP_MM_O': rng.choice(groups_btup_mm_o, num_rows, p=proportions),
+        'BTBP_MM_O': rng.choice(groups_btbp_mm_o, num_rows, p=proportions),
+        'UTBP_MM_S': rng.choice(groups_utbp_mm_s, num_rows, p=proportions),
+        'BTUP_MM_S': rng.choice(groups_btup_mm_s, num_rows, p=proportions),
+        'BTBP_MM_S': rng.choice(groups_btbp_mm_s, num_rows, p=proportions),
     }
     df = pd.DataFrame(data)
 
     # Generate target column - normally distributed
-    df['target'] = np.random.normal(loc=50, scale=10, size=num_rows)
+    df['target'] = rng.normal(loc=50, scale=10, size=num_rows)
     # Generate prediction column - initially close to target
-    df['prediction'] = df['target'] + np.random.normal(loc=0, scale=20, size=num_rows)
+    df['prediction'] = df['target'] + rng.normal(loc=0, scale=20, size=num_rows)
 
     # Apply bias conditions:
     biased_categories = []
