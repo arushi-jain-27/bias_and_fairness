@@ -261,5 +261,4 @@ def fair_ai_results(df, protected_groups, target_feature="target", prediction_co
     else:
         raise ValueError(f"Unsupported task_type: {task_type}. Use 'regression' or 'classification'")
 
-    # Combine all bucket results (regression only path reaches here)
  

@@ -48,11 +48,11 @@ def low_bias_single_cat_equal_distribution(seed = 0):
     df.loc[df['UTBP'] == biased_utbp_category, 'prediction'] *= 1.2  # Introduce bias in prediction
 
     # 3. Target is biased, but prediction is unbiased for 1 category in BTUP
-    biased_btup_category = 'btup_2'
+    biased_btup_category = 'btup_1'
     df.loc[df['BTUP'] == biased_btup_category, ['target', 'prediction']] *= 1.2  # Introduce bias in target but prediction still follows the target
 
     # 4. Both target and prediction are biased for BTBP
-    biased_btbp_category = 'btbp_3'
+    biased_btbp_category = 'btbp_1'
     df.loc[df['BTBP'] == biased_btbp_category, 'target'] *= 0.85  # Introduce bias in target
     df.loc[df['BTBP'] == biased_btbp_category, 'prediction'] *= 0.75  # Introduce more bias in prediction
 
@@ -93,11 +93,11 @@ def high_bias_single_cat_equal_distribution(seed = 0):
     df.loc[df['UTBP'] == biased_utbp_category, 'prediction'] *= 1.3  # Introduce bias in prediction
 
     # 3. Target is biased, but prediction is unbiased for 1 category in BTUP
-    biased_btup_category = 'btup_2'
+    biased_btup_category = 'btup_1'
     df.loc[df['BTUP'] == biased_btup_category, ['target', 'prediction']] *= 1.3  # Introduce bias in target but prediction still follows the target
 
     # 4. Both target and prediction are biased for BTBP
-    biased_btbp_category = 'btbp_3'
+    biased_btbp_category = 'btbp_1'
     df.loc[df['BTBP'] == biased_btbp_category, 'target'] *= 0.75  # Introduce bias in target
     df.loc[df['BTBP'] == biased_btbp_category, 'prediction'] *= 0.6  # Introduce more bias in prediction
 
