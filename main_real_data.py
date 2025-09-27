@@ -5,7 +5,7 @@ from real_data_utils import load_adult_classification, load_insurance_regression
 
 def run_classification_adult():
     df = load_adult_classification(sample_frac=1.0)
-    protected_groups = ['sex', 'race']
+    protected_groups = ['sex', 'race', 'occupation']
     # 2 classes -> provide 2 prob columns
     df_fairai = fair_ai_results(
         df,
