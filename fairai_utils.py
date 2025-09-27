@@ -112,6 +112,39 @@ def calculate_model_fairness_classwise(df: pd.DataFrame, target_feature: str, pr
     return final_df
 
 
+def calculate_regression_target_fairness(df: pd.DataFrame, target_feature: str, protected_groups: list):
+    """
+    Per-group target fairness for regression via point-biserial correlation (group vs rest).
+    Returns one row per protected class with Fairness_target = 1 - |r_pb|.
+    """
+    rows = []
+    y = df[target_feature].to_numpy()
+    # population std (ddof=0) to keep it in [0,1]
+    sigma = np.std(y)
+    if sigma == 0 or np.isnan(sigma):
+        sigma = 1e-12  # avoid divide by zero; fairness will be ~1
+
+    for protected_feature in protected_groups:
+        for g, grp_df in df.groupby(protected_feature):
+            a = (df[protected_feature] == g).astype(int).to_numpy()
+            p = a.mean()
+            if p <= 0 or p >= 1:
+                r_pb = 0.0  # degenerate group; treat as no association
+            else:
+                mu1 = y[a == 1].mean()
+                mu0 = y[a == 0].mean()
+                r_pb = ((mu1 - mu0) / sigma) * np.sqrt(p * (1 - p))
+
+            rows.append({
+                "Protected_Feature": protected_feature,
+                "Protected_Class": g,
+                "count": int(a.sum()),
+                "Fairness_target": 1.0 - abs(float(r_pb)),
+                # optional diagnostics:
+                # "r_pb": float(r_pb), "p_group": float(p), "mu1": mu1, "mu0": mu0
+            })
+
+    return pd.DataFrame(rows)
 
 
 def calculate_classification_target_fairness(df: pd.DataFrame, target_feature: str, protected_groups: list):
@@ -182,12 +215,16 @@ def fair_ai_results(df, protected_groups, target_feature="target", prediction_co
     
     df_copy = df.copy()
     
-    bnf_q = []
+    pred_bucket_list = []
     
     if task_type == "regression":
         # Original quantile-based bucketing for regression
         if len(prediction_cols) != 1:
             raise ValueError("For regression, prediction_cols must contain exactly one column")
+
+        bnf_target = calculate_regression_target_fairness(df_copy, target_feature, protected_groups)[[
+            "Protected_Feature", "Protected_Class", "count", "Fairness_target"
+        ]].rename(columns={"Fairness_target": "weighted_Fairness_target"})
         
         df_copy['quantile'] = pd.qcut(df_copy[target_feature], q=10, labels=False) + 1
         
@@ -196,11 +233,8 @@ def fair_ai_results(df, protected_groups, target_feature="target", prediction_co
             q = calculate_model_fairness(quantile_df, target_feature, prediction_col=prediction_cols[0], protected_groups=protected_groups)
             q['bucket'] = f"q{i}"
             q['bucket_type'] = 'quantile'
-            bnf_q.append(q)
+            pred_bucket_list.append(q)
 
-        bnf = pd.concat(bnf_q, ignore_index=True)
-        bnf = bnf.groupby(["Protected_Feature", "Protected_Class"]).apply(weighted_avg).reset_index()
-        return bnf
             
     elif task_type == "classification":
         # For classification, we need TWO types of analysis:
@@ -223,7 +257,7 @@ def fair_ai_results(df, protected_groups, target_feature="target", prediction_co
 
 
         # --- Method 2: Class-specific prediction fairness ---
-        pred_bucket_list = []
+        
         for class_label in unique_classes:
             # Create bucket for this class (all samples where true class = class_label)
             class_df = df_copy[df_copy[target_feature] == class_label].copy()
@@ -245,20 +279,24 @@ def fair_ai_results(df, protected_groups, target_feature="target", prediction_co
             pred_bucket_list.append(q)
 
 
-        pred_buckets_df = pd.concat(pred_bucket_list, ignore_index=True)
-        bnf_pred = pred_buckets_df.groupby(["Protected_Feature", "Protected_Class"]).apply(weighted_avg).reset_index().drop(columns=["weighted_Fairness_target"])
+
 
         # Merge so that final weighted_Fairness_target comes from target view
         # and weighted_Fairness_pred comes from prediction view only
-        bnf = bnf_target[["Protected_Feature", "Protected_Class", "weighted_Fairness_target"]].merge(
-            bnf_pred,
-            on=["Protected_Feature", "Protected_Class"],
-            how="inner"
-        )
 
-        return bnf
     
     else:
         raise ValueError(f"Unsupported task_type: {task_type}. Use 'regression' or 'classification'")
+
+
+    pred_buckets_df = pd.concat(pred_bucket_list, ignore_index=True)
+    bnf_pred = pred_buckets_df.groupby(["Protected_Feature", "Protected_Class"]).apply(weighted_avg).reset_index().drop(columns=["weighted_Fairness_target"])
+    bnf = bnf_target[["Protected_Feature", "Protected_Class", "weighted_Fairness_target"]].merge(
+        bnf_pred,
+        on=["Protected_Feature", "Protected_Class"],
+        how="inner"
+    )
+
+    return bnf
 
  
