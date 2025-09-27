@@ -111,81 +111,55 @@ def calculate_model_fairness_classwise(df: pd.DataFrame, target_feature: str, pr
     return final_df
 
 
+
+
 def calculate_classification_target_fairness(df: pd.DataFrame, target_feature: str, protected_groups: list):
     """
-    Calculate target fairness for classification using chi-square test
-    Compares class distributions across protected groups
-    
-    Args:
-        df (pd.DataFrame): Input dataframe with target and protected features
-        target_feature (str): column name of target feature (class labels)
-        protected_groups (list): List of protected group column names
-    
-    Returns:
-        pd.DataFrame: Fairness results with chi-square based metrics
+    Target fairness for classification via per-group Cramér's V.
+    For each protected group value g, build a 2 x C table [g vs rest] x [class],
+    compute V_g, and set Fairness_target = 1 - V_g (higher = more fair).
     """
-    
+
+
+    def _cramers_v_2xC(table_2xC: np.ndarray) -> float:
+        """
+        Cramér's V for a 2 x C contingency table (no bias correction).
+        V in [0,1]; for 2xC, V = sqrt(chi2 / n).
+        """
+        chi2, _, _, _ = chi2_contingency(table_2xC)
+        n = table_2xC.sum()
+        return 0.0 if n <= 0 else float(np.sqrt(chi2 / n))
+
+
     final_df_list = []
-    
+
     for protected_feature in protected_groups:
-        print(f'Computing classification target fairness for {protected_feature}')
-        
-        # Create contingency table: protected groups vs classes
-        contingency_table = pd.crosstab(df[protected_feature], df[target_feature])
-        
-        # Perform chi-square test
-        chi2_stat, p_value, dof, expected = chi2_contingency(contingency_table)
-        
-        # Calculate fairness metric for each protected group
-        fairness_results = []
-        
-        for group_name in contingency_table.index:
-            # Observed distribution for this group
-            observed = contingency_table.loc[group_name].values
-            total_group = observed.sum()
-            observed_proportions = observed / total_group
-            
-            # Expected distribution (overall population distribution)
-            overall_proportions = df[target_feature].value_counts(normalize=True).sort_index().values
-            
-            # Calculate chi-square contribution for this group
-            expected_counts = overall_proportions * total_group
-            chi2_contribution = np.sum((observed - expected_counts)**2 / expected_counts)
-            
-            # Convert chi-square to fairness score (higher = more fair)
-            # Use a more aggressive transformation to achieve target sensitivity
-            # For high bias like [0.2, 0.5, 0.3] vs [0.34, 0.33, 0.33], we want score < 0.8
-            
-            # Normalize chi-square by sample size and degrees of freedom
-            chi2_per_sample = chi2_contribution / total_group
-            
-            # Apply sigmoid-like transformation for better sensitivity
-            # Scale factor chosen to map typical bias patterns to desired range
-            scale_factor = 10  # Adjust this to control sensitivity
-            fairness_score = 1 / (1 + scale_factor * chi2_per_sample)
-            
-            # Store additional metrics for debugging
-            chi2_normalized = chi2_contribution / total_group
-            
-            fairness_results.append({
-                'Protected_Feature': protected_feature,
-                'Protected_Class': group_name,
-                'count': total_group,
-                'observed_proportions': str(observed_proportions.round(3)),
-                'expected_proportions': str(overall_proportions.round(3)),
-                'chi2_contribution': chi2_contribution,
-                'chi2_per_sample': chi2_per_sample,
-                'Fairness_target': fairness_score,
-                'chi2_pvalue': p_value
+        print(f"Computing classification target fairness (Cramér's V) for {protected_feature}")
+
+        # protected x class contingency; keep its column order for alignment
+        contingency = pd.crosstab(df[protected_feature], df[target_feature])
+        class_order = list(contingency.columns)
+
+        rows = []
+        for group_name in contingency.index:
+            counts_group = contingency.loc[group_name, class_order].values
+            counts_rest  = contingency.drop(index=group_name).sum(axis=0).reindex(class_order).values
+            table_2xC = np.vstack([counts_group, counts_rest])
+
+            V_g = _cramers_v_2xC(table_2xC)
+            fairness_score = 1.0 - V_g  # higher => closer to no association (fair)
+
+            rows.append({
+                "Protected_Feature": protected_feature,
+                "Protected_Class": group_name,
+                "count": int(counts_group.sum()),
+                "Fairness_target": fairness_score,
             })
-        
-        group_df = pd.DataFrame(fairness_results)
-        final_df_list.append(group_df)
-    
-    # Combine all results
-    final_df = pd.concat(final_df_list, ignore_index=True)
-    
-    return final_df
+
+        final_df_list.append(pd.DataFrame(rows))
+
+    return pd.concat(final_df_list, ignore_index=True)
+
 
     
 def fair_ai_results(df, protected_groups, target_feature="target", prediction_cols=["prediction"], 

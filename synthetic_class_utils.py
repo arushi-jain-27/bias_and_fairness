@@ -115,7 +115,7 @@ def high_bias_single_cat_equal_distribution_classification(seed = 0):
 
     # Return bias information: (category_name, target_bias_indicator, pred_bias_indicator)
     # For classification, bias indicators represent the bias pattern applied
-    return df, [(biased_utbp_category, [0.4,0.35,0.25], [1.8, 2.0, 0.3]), (biased_btup_category, [0.2, 0.5, 0.3], [1,1,1]), (biased_btbp_category, [0.2, 0.5, 0.3], [0.5, 3, 1.5])]
+    return df, [(biased_utbp_category, [0.34,0.33,0.33], [1.8, 2.0, 0.3]), (biased_btup_category, [0.2, 0.5, 0.3], [1,1,1]), (biased_btbp_category, [0.2, 0.5, 0.3], [0.5, 3, 1.5])]
 
 
 def high_bias_single_cat_unequal_distribution_classification(seed = 0):
@@ -218,7 +218,7 @@ def high_bias_single_cat_unequal_distribution_classification(seed = 0):
     )
 
     # Return bias information: (category_name, target_bias_indicator, pred_bias_indicator)
-    return df, [(biased_utbp_category, [0.4,0.35,0.25], [1.8, 2.0, 0.3]), (biased_btup_category, [0.2, 0.5, 0.3], [1,1,1]), (biased_btbp_category, [0.2, 0.5, 0.3], [0.5, 3, 1.5])]
+    return df, [(biased_utbp_category, [0.34,0.33,0.33], [1.8, 2.0, 0.3]), (biased_btup_category, [0.2, 0.5, 0.3], [1,1,1]), (biased_btbp_category, [0.2, 0.5, 0.3], [0.5, 3, 1.5])]
 
 
 def high_bias_single_cat_equal_distribution_classification_poor_model(seed = 0):
@@ -320,4 +320,4 @@ def high_bias_single_cat_equal_distribution_classification_poor_model(seed = 0):
     )
 
     # Return bias information: (category_name, target_bias_indicator, pred_bias_indicator)
-    return df, [(biased_utbp_category, [0.4,0.35,0.25], [1.8, 2.0, 0.3]), (biased_btup_category, [0.2, 0.5, 0.3], [1,1,1]), (biased_btbp_category, [0.2, 0.5, 0.3], [0.5, 3, 1.5])]
+    return df, [(biased_utbp_category, [0.34,0.33,0.33], [1.8, 2.0, 0.3]), (biased_btup_category, [0.2, 0.5, 0.3], [1,1,1]), (biased_btbp_category, [0.2, 0.5, 0.3], [0.5, 3, 1.5])]
