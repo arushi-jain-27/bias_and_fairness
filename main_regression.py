@@ -4,20 +4,6 @@ from dalex_utils import *
 from synthetic_reg_utils import *
 
 
-def choose_simulation(simulation_type):
-    """Choose and run the appropriate simulation function"""
-    if simulation_type == "low_bias_single_cat_equal_distribution":
-        return low_bias_single_cat_equal_distribution()
-    elif simulation_type == "high_bias_single_cat_equal_distribution":
-        return high_bias_single_cat_equal_distribution()
-    elif simulation_type == "high_bias_single_cat_unequal_distribution":
-        return high_bias_single_cat_unequal_distribution()
-    elif simulation_type == "high_bias_multiple_cats_unequal_distribution":
-        return high_bias_multiple_cats_unequal_distribution()
-    elif simulation_type == "high_bias_multiple_cats_unequal_distribution_poor_model":
-        return high_bias_multiple_cats_unequal_distribution_poor_model()
-    else:
-        raise ValueError(f"Unknown simulation type: {simulation_type}")
 
 def get_protected_groups(simulation_type):
     """Get the appropriate protected groups for each simulation type"""
