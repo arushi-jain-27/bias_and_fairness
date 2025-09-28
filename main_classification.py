@@ -2,19 +2,8 @@
 from fairai_utils import *
 from synthetic_class_utils import *
 import pandas as pd
-import xlsxwriter
 
 
-def choose_classification_simulation(simulation_type):
-    """Choose and run the appropriate classification simulation function"""
-    if simulation_type == "high_bias_single_cat_equal_distribution_classification":
-        return high_bias_single_cat_equal_distribution_classification()
-    elif simulation_type == "high_bias_single_cat_unequal_distribution_classification":
-        return high_bias_single_cat_unequal_distribution_classification()
-    elif simulation_type == "high_bias_single_cat_equal_distribution_classification_poor_model":
-        return high_bias_single_cat_equal_distribution_classification_poor_model()
-    else:
-        raise ValueError(f"Unknown classification simulation type: {simulation_type}")
 
 def get_protected_groups_classification(simulation_type):
     """Get the appropriate protected groups for each classification simulation type"""
