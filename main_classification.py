@@ -51,7 +51,7 @@ if __name__ == "__main__":
         df_fairai['simulation_type'] = simulation_type
         
         # Select and rename columns
-        df_combined = df_fairai[["simulation_type", "Protected_Feature", "Protected_Class", "target_bias", "pred_bias", "count", "weighted_Fairness_target", "weighted_Fairness_pred"]]
+        df_combined = df_fairai[["simulation_type", "Protected_Feature", "Protected_Class", "target_bias", "pred_bias", "count", "weighted_Fairness_target", "weighted_Fairness_pred", "global_bias_direction"]]
         df_combined = df_combined.rename(columns={"weighted_Fairness_target": "FairAI_target", "weighted_Fairness_pred": "FairAI_pred"})
         df_all.append(df_combined)
 

@@ -3,7 +3,7 @@ import numpy as np
 from scipy.stats import chi2_contingency
 
 
-value_columns = ['Fairness_pred']
+value_columns = ['Fairness_pred', 'Fairness_pred_direction']
 
 def weighted_avg(group):
     d = {}
@@ -12,6 +12,22 @@ def weighted_avg(group):
         d[f'weighted_{col}'] = (group[col] * group["count"]).sum() / total_weight
     d['count'] = total_weight  # Preserve the total count
     return pd.Series(d)
+
+
+# Add global bias direction column based on Fairness_pred_direction
+def get_global_bias_direction(row):
+    fairness_pred = row['weighted_Fairness_pred']
+    fairness_pred_direction = row['weighted_Fairness_pred_direction']
+    
+    if fairness_pred > 0.8:
+        return "no bias"
+    else:
+        if fairness_pred_direction < 0.8:
+            return "negative"
+        elif fairness_pred_direction > 1.25:
+            return "positive"
+        else:
+            return "mixed"
 
 
 
@@ -45,7 +61,7 @@ def calculate_model_fairness(df: pd.DataFrame, target_feature: str, prediction_c
     # Combine all fairness dataframes
     final_df = pd.concat(final_df_list, ignore_index=True)
     
-    final_bnf_df = final_df[['Protected_Feature', 'Protected_Class', 'count', 'Fairness_pred']]
+    final_bnf_df = final_df[['Protected_Feature', 'Protected_Class', 'count', 'Fairness_pred', 'Fairness_pred_direction']]
 
     return final_bnf_df
 
@@ -87,6 +103,7 @@ def calculate_model_fairness_classwise(df: pd.DataFrame, protected_group: str, p
     
     # Calculate prediction fairness using ratio-based approach
     grouped_df['Fairness_pred'] = calculate_fairness_ratio(grouped_df['average_pred'], grouped_df['otheravg_pred'])
+    grouped_df['Fairness_pred_direction'] = grouped_df['average_pred'] / grouped_df['otheravg_pred']
     
     
     # Rename and select columns
@@ -94,7 +111,7 @@ def calculate_model_fairness_classwise(df: pd.DataFrame, protected_group: str, p
     final_df['Protected_Feature'] = protected_group
     
     # Select final columns
-    final_df = final_df[['Protected_Class', 'count', 'Fairness_pred', 'Protected_Feature']]
+    final_df = final_df[['Protected_Class', 'count', 'Fairness_pred', 'Fairness_pred_direction', 'Protected_Feature']]
     
     return final_df
 
@@ -278,11 +295,17 @@ def fair_ai_results(df, protected_groups, target_feature="target", prediction_co
 
     pred_buckets_df = pd.concat(pred_bucket_list, ignore_index=True)
     bnf_pred = pred_buckets_df.groupby(["Protected_Feature", "Protected_Class"]).apply(weighted_avg).reset_index()
+    
     bnf = bnf_target[["Protected_Feature", "Protected_Class", "weighted_Fairness_target"]].merge(
         bnf_pred,
         on=["Protected_Feature", "Protected_Class"],
         how="inner"
     )
+    
+
+    
+    bnf['global_bias_direction'] = bnf.apply(get_global_bias_direction, axis=1)
+    bnf = bnf.drop(columns=['weighted_Fairness_pred_direction'])
 
     return bnf
 

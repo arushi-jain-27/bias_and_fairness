@@ -65,7 +65,7 @@ if __name__ == "__main__":
         df_combined['target_bias'] = df_combined['Protected_Class'].map(target_bias_dict).fillna(1)
         df_combined['pred_bias'] = df_combined['Protected_Class'].map(pred_bias_dict).fillna(1)
         df_combined['simulation_type'] = simulation_type
-        df_combined = df_combined[["simulation_type", "Protected_Feature", "Protected_Class", "target_bias", "pred_bias", "count", "weighted_Fairness_target", "weighted_Fairness_pred", "independence", "separation", "sufficiency"]]
+        df_combined = df_combined[["simulation_type", "Protected_Feature", "Protected_Class", "target_bias", "pred_bias", "count", "weighted_Fairness_target", "weighted_Fairness_pred", "global_bias_direction"]]
         df_combined = df_combined.rename(columns={"weighted_Fairness_target": "FairAI_target", "weighted_Fairness_pred": "FairAI_pred"})
         df_all.append(df_combined)
 
