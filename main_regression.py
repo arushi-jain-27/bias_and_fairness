@@ -48,7 +48,7 @@ if __name__ == "__main__":
         )
         
         # Drop the duplicate subgroup column
-        df_combined = df_combined.drop(['subgroup', 'weighted_average_target', 'weighted_average_pred', 'weighted_otheravg_target', 'weighted_otheravg_pred'], axis=1)
+        df_combined = df_combined.drop(['subgroup'], axis=1)
         
         # Create dictionaries for bias values from biased_categories
         # biased_categories is now a list of (cat_name, target_bias, pred_bias) tuples
