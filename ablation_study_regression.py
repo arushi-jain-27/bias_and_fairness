@@ -145,41 +145,77 @@ def run_fairness(df: pd.DataFrame, protected: List[str]) -> pd.DataFrame:
     return df.rename(columns={"weighted_Fairness_target": "FairAI_target", "weighted_Fairness_pred": "FairAI_pred"})
 
 
-def ablate_vary_bias(levels: List[Tuple[float,float]], base_cfg: GenConfig) -> pd.DataFrame:
+def run_multiple_seeds(cfg: GenConfig, protected: List[str], num_runs: int = 30) -> pd.DataFrame:
+    """Run the same configuration multiple times with different seeds and aggregate results."""
+    all_results = []
+    
+    for run_idx in range(num_runs):
+        # Use different seed for each run
+        run_cfg = GenConfig(**{**cfg.__dict__, 'seed': cfg.seed + run_idx})
+        df, _ = generate_3cat_single_bias(run_cfg)
+        result = run_fairness(df, protected)
+        result['run'] = run_idx
+        all_results.append(result)
+    
+    # Combine all runs
+    combined = pd.concat(all_results, ignore_index=True)
+    
+    # Calculate statistics for each protected feature and class combination
+    stats = combined.groupby(['Protected_Feature', 'Protected_Class']).agg({
+        'count': ['mean', 'std'],
+        'FairAI_target': ['mean', 'std'],
+        'FairAI_pred': ['mean', 'std']
+    }).reset_index()
+    
+    # Flatten column names
+    stats.columns = ['Protected_Feature', 'Protected_Class', 
+                     'count_mean', 'count_std',
+                     'FairAI_target_mean', 'FairAI_target_std',
+                     'FairAI_pred_mean', 'FairAI_pred_std']
+    
+    # Calculate standard errors (std / sqrt(n))
+    stats['count_se'] = stats['count_std'] / np.sqrt(num_runs)
+    stats['FairAI_target_se'] = stats['FairAI_target_std'] / np.sqrt(num_runs)
+    stats['FairAI_pred_se'] = stats['FairAI_pred_std'] / np.sqrt(num_runs)
+    
+    return stats[['Protected_Feature', 'Protected_Class', 'count_mean', 'FairAI_target_mean', 'FairAI_target_se', 'FairAI_pred_mean', 'FairAI_pred_se']]
+
+
+def ablate_vary_bias(levels: List[Tuple[float,float]], base_cfg: GenConfig, num_runs: int = 30) -> pd.DataFrame:
     rows = []
     for t, p in levels:
         # vary pred-only bias and target-only bias together for a sweep; keep BTBP fixed to show contrast
         cfg = GenConfig(**{**base_cfg.__dict__, 'pred_bias_factor': p, 'target_bias_factor': t, 'both_target_factor': t, 'both_pred_factor': p})
-        df, info = generate_3cat_single_bias(cfg)
-        bnf = run_fairness(df, ['UTUP','UTBP','BTUP','BTBP'])
-        bnf['ablation'] = 'vary_bias'
-        bnf['level'] = f"target={t},p={p}"
-        rows.append(bnf)
+        stats = run_multiple_seeds(cfg, ['UTUP','UTBP','BTUP','BTBP'], num_runs)
+        print("Finished running fairness for target={t},p={p}")
+        stats['ablation'] = 'vary_bias'
+        stats['level'] = f"target={t},p={p}"
+        rows.append(stats)
     return pd.concat(rows, ignore_index=True)
 
 
-def ablate_vary_distribution(proportion_sets: List[Tuple[float,float,float]], base_cfg: GenConfig) -> pd.DataFrame:
+def ablate_vary_distribution(proportion_sets: List[Tuple[float,float,float]], base_cfg: GenConfig, num_runs: int = 30) -> pd.DataFrame:
     rows = []
     for p in proportion_sets:
         cfg = GenConfig(**{**base_cfg.__dict__, 'proportions': p})
-        df, info = generate_3cat_single_bias(cfg)
-        bnf = run_fairness(df, ['UTUP','UTBP','BTUP','BTBP'])
-        bnf['ablation'] = 'vary_distribution'
-        bnf['level'] = str(tuple(round(pi,3) for pi in p))
-        rows.append(bnf)
+        stats = run_multiple_seeds(cfg, ['UTUP','UTBP','BTUP','BTBP'], num_runs)
+        print("Finished running fairness for distribution={p}")
+        stats['ablation'] = 'vary_distribution'
+        stats['level'] = str(tuple(round(pi,3) for pi in p))
+        rows.append(stats)
     return pd.concat(rows, ignore_index=True)
 
 
-def ablate_vary_model(perf_settings: List[Tuple[float,float]], base_cfg: GenConfig) -> pd.DataFrame:
+def ablate_vary_model(perf_settings: List[Tuple[float,float]], base_cfg: GenConfig, num_runs: int = 30) -> pd.DataFrame:
     """perf_settings: list of (pred_alpha, noise_scale) pairs."""
     rows = []
     for alpha, noise in perf_settings:
         cfg = GenConfig(**{**base_cfg.__dict__, 'pred_alpha': alpha, 'noise_scale': noise})
-        df, info = generate_3cat_single_bias(cfg)
-        bnf = run_fairness(df, ['UTUP','UTBP','BTUP','BTBP'])
-        bnf['ablation'] = 'vary_model'
-        bnf['level'] = f"alpha={alpha},noise={noise}"
-        rows.append(bnf)
+        stats = run_multiple_seeds(cfg, ['UTUP','UTBP','BTUP','BTBP'], num_runs)
+        print("Finished running fairness for model={alpha},{noise}")
+        stats['ablation'] = 'vary_model'
+        stats['level'] = f"alpha={alpha},noise={noise}"
+        rows.append(stats)
     return pd.concat(rows, ignore_index=True)
 
 # ----------------------------
@@ -187,7 +223,8 @@ def ablate_vary_model(perf_settings: List[Tuple[float,float]], base_cfg: GenConf
 # ----------------------------
 
 def main():
-
+    num_runs = 30  # Number of runs per configuration for statistical analysis
+    
     base_cfg = GenConfig(
         num_rows=6000,
         proportions=(1/3, 1/3, 1/3),
@@ -200,9 +237,10 @@ def main():
         seed=DEFAULT_SEED,
     )
 
-
+    print(f"Starting ablation study with {num_runs} runs per configuration...")
 
     # 1) Varying amount of bias (magnitude sweep)
+    print("\n1. Running bias variation ablation...")
     bias_levels = [
                 (1.0, 1.0), 
                 (0.75, 0.75),
@@ -214,17 +252,23 @@ def main():
                 (1.2, 1.6), 
                 (1.2, 1.7), 
                 ]
-    out_bias = ablate_vary_bias(bias_levels, base_cfg)
+    out_bias = ablate_vary_bias(bias_levels, base_cfg, num_runs)
+    print(f"   Completed bias variation: {len(bias_levels)} configurations × {num_runs} runs")
 
     # 2) Varying class distribution (group proportions)
+    print("\n2. Running distribution variation ablation...")
     proportion_sets = [(1/3,1/3,1/3), (0.5,0.25,0.25), (0.25, 0.25, 0.5), (0.7,0.2,0.1), (0.1, 0.2, 0.7), (0.2, 0.1, 0.7), (0.8,0.19,0.01), (0.01, 0.19, 0.8), (0.19, 0.01, 0.8)]
-    out_dist = ablate_vary_distribution(proportion_sets, base_cfg)
+    out_dist = ablate_vary_distribution(proportion_sets, base_cfg, num_runs)
+    print(f"   Completed distribution variation: {len(proportion_sets)} configurations × {num_runs} runs")
 
     # 3) Varying model performance (signal-to-noise via alpha and noise)
+    print("\n3. Running model performance variation ablation...")
     perf_settings = [(1.0,5.0), (0.8,5.0), (1.2,5.0), (1.0,10.0),(0.8,10.0), (1.2,10.0), (1.0,20.0),(0.8,20.0), (1.2,20.0)]
-    out_perf = ablate_vary_model(perf_settings, base_cfg)
+    out_perf = ablate_vary_model(perf_settings, base_cfg, num_runs)
+    print(f"   Completed model performance variation: {len(perf_settings)} configurations × {num_runs} runs")
 
-    # Optional: combined CSV for quick analysis
+    # Combine results and save
+    print("\n4. Combining results and saving...")
     combined = pd.concat([out_bias, out_dist, out_perf], ignore_index=True)
     combined.to_excel('results/reg_ablation.xlsx', index=False)
 

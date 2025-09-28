@@ -28,18 +28,15 @@ def calculate_model_fairness(df: pd.DataFrame, target_feature: str, prediction_c
         pd.DataFrame: A DataFrame containing fairness scores for all protected groups
     """
 
-    print('Calculate Model Fairness Start')
 
 
     df_scored = df.copy()
 
     df_count = len(df_scored)
-    print(f'Total count: {df_count}')
 
     final_df_list = []
     
     for i, protected_feature in enumerate(protected_groups):
-        print(f'Computing fairness scores for {protected_feature}')
         fairness_df = calculate_model_fairness_classwise(df_scored, target_feature, protected_feature, prediction_col)
         
         fairness_df = fairness_df.sort_values(['Protected_Class'])
@@ -49,7 +46,6 @@ def calculate_model_fairness(df: pd.DataFrame, target_feature: str, prediction_c
     final_df = pd.concat(final_df_list, ignore_index=True)
     
     final_bnf_df = final_df[['Protected_Feature', 'Protected_Class', 'count', 'average_target', 'otheravg_target', 'Fairness_target', 'average_pred', 'otheravg_pred', 'Fairness_pred']]
-    print('Fairness computations for overall population is complete')
 
     return final_bnf_df
 
