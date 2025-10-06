@@ -187,9 +187,9 @@ def ablate_vary_bias(levels: List[Tuple[float,float]], base_cfg: GenConfig, num_
         # vary pred-only bias and target-only bias together for a sweep; keep BTBP fixed to show contrast
         cfg = GenConfig(**{**base_cfg.__dict__, 'pred_bias_factor': p, 'target_bias_factor': t, 'both_target_factor': t, 'both_pred_factor': p})
         stats = run_multiple_seeds(cfg, ['UTUP','UTBP','BTUP','BTBP'], num_runs)
-        print("Finished running fairness for target={t},p={p}")
+        print(f"Finished running fairness for t={t},p={p}")
         stats['ablation'] = 'vary_bias'
-        stats['level'] = f"target={t},p={p}"
+        stats['level'] = f"t={t},p={p}"
         rows.append(stats)
     return pd.concat(rows, ignore_index=True)
 
@@ -199,7 +199,7 @@ def ablate_vary_distribution(proportion_sets: List[Tuple[float,float,float]], ba
     for p in proportion_sets:
         cfg = GenConfig(**{**base_cfg.__dict__, 'proportions': p})
         stats = run_multiple_seeds(cfg, ['UTUP','UTBP','BTUP','BTBP'], num_runs)
-        print("Finished running fairness for distribution={p}")
+        print(f"Finished running fairness for distribution={p}")
         stats['ablation'] = 'vary_distribution'
         stats['level'] = str(tuple(round(pi,3) for pi in p))
         rows.append(stats)
@@ -212,9 +212,9 @@ def ablate_vary_model(perf_settings: List[Tuple[float,float]], base_cfg: GenConf
     for alpha, noise in perf_settings:
         cfg = GenConfig(**{**base_cfg.__dict__, 'pred_alpha': alpha, 'noise_scale': noise})
         stats = run_multiple_seeds(cfg, ['UTUP','UTBP','BTUP','BTBP'], num_runs)
-        print("Finished running fairness for model={alpha},{noise}")
+        print(f"Finished running fairness for model={alpha},{noise}")
         stats['ablation'] = 'vary_model'
-        stats['level'] = f"alpha={alpha},noise={noise}"
+        stats['level'] = f"a={alpha},b={noise}"
         rows.append(stats)
     return pd.concat(rows, ignore_index=True)
 

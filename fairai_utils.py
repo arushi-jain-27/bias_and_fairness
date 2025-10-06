@@ -302,7 +302,28 @@ def fair_ai_results(df, protected_groups, target_feature="target", prediction_co
         how="inner"
     )
     
-
+    # For classification, add bucket-wise (class-wise) fairness as columns
+    if task_type == "classification":
+        # Create pivot table to get class-wise fairness as columns
+        bucket_pivot = pred_buckets_df.pivot_table(
+            index=["Protected_Feature", "Protected_Class"], 
+            columns="bucket", 
+            values="Fairness_pred", 
+            aggfunc="first"
+        ).reset_index()
+        
+        # Rename columns to be more descriptive
+        bucket_pivot.columns.name = None  # Remove the column name
+        bucket_columns = [col for col in bucket_pivot.columns if col.startswith('class_')]
+        rename_dict = {col: f"fairness_{col}" for col in bucket_columns}
+        bucket_pivot = bucket_pivot.rename(columns=rename_dict)
+        
+        # Merge bucket-wise fairness with main results
+        bnf = bnf.merge(
+            bucket_pivot,
+            on=["Protected_Feature", "Protected_Class"],
+            how="left"
+        )
     
     bnf['global_bias_direction'] = bnf.apply(get_global_bias_direction, axis=1)
     bnf = bnf.drop(columns=['weighted_Fairness_pred_direction'])

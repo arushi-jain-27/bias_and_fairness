@@ -59,7 +59,7 @@ def generate_classification_simulation(seed=0, proportions=None, correct_alpha=7
     df = pd.DataFrame(data)
 
     # Generate target column - 3 classes with balanced distribution
-    df['target'] = rng.choice([0, 1, 2], num_rows, p=[0.34, 0.33, 0.33])
+    df['target'] = rng.choice([0, 1, 2], num_rows, p=[1/3, 1/3, 1/3])
     
     # Generate base probabilities using provided parameters
     for class_idx in [0, 1, 2]:
