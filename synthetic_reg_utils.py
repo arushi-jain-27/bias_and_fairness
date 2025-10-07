@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def choose_simulation(simulation_type, seed=0):
+def choose_simulation(simulation_type, seed=42):
     if simulation_type == "low_bias_single_cat_equal_distribution":
         return generate_single_cat_regression_simulation(
             seed=seed,

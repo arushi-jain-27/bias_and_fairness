@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def choose_classification_simulation(simulation_type, seed=0):
+def choose_classification_simulation(simulation_type, seed=42):
     """Choose and run the appropriate classification simulation function"""
     if simulation_type == "high_bias_single_cat_equal_distribution_classification":
         return generate_classification_simulation(
