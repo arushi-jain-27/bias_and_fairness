@@ -194,11 +194,11 @@ def draw_regression_dotplot(ax, df, *, multi, xlim, show_y):
             ax.axhline(boundary - 0.5, color="#E3E3E3", linewidth=1.0, zorder=0)
 
     ax.set_ylim(len(df) - 0.35, -0.65)
-    ax.set_yticks(y)
     if show_y:
+        ax.set_yticks(y)
         ax.set_yticklabels(df["label"], fontsize=8)
     else:
-        ax.set_yticklabels([])
+        ax.tick_params(axis="y", labelleft=False)
 
     ax.set_xlabel("Prediction diagnostic")
     ax.grid(axis="x", linestyle=":", alpha=0.28)
