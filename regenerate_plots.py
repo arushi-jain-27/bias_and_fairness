@@ -184,10 +184,10 @@ def draw_regression_dotplot(ax, df, *, multi, xlim, show_y):
         ax.scatter(dalex_plot, yi, marker="^", s=52, color=color, zorder=3)
 
         if ours > xlim[1]:
-            ax.annotate(f"{ours:.2f}→", (xlim[1], yi), xytext=(-3, 6), textcoords="offset points", ha="right", va="center", fontsize=7, color=color)
+            ax.annotate(f"{ours:.2f}→", (xlim[1], yi), xytext=(-3, 10), textcoords="offset points", ha="right", va="center", fontsize=12, color=color)
 
         if dalex > xlim[1]:
-            ax.annotate(f"{dalex:.2f}→", (xlim[1], yi), xytext=(-3, -6), textcoords="offset points", ha="right", va="center", fontsize=7, color=color)
+            ax.annotate(f"{dalex:.2f}→", (xlim[1], yi), xytext=(-3, -10), textcoords="offset points", ha="right", va="center", fontsize=12, color=color)
 
     if multi:
         for boundary in range(4, len(df), 4):
@@ -196,17 +196,18 @@ def draw_regression_dotplot(ax, df, *, multi, xlim, show_y):
     ax.set_ylim(len(df) - 0.35, -0.65)
     if show_y:
         ax.set_yticks(y)
-        ax.set_yticklabels(df["label"], fontsize=8)
+        ax.set_yticklabels(df["label"], fontsize=14)
     else:
         ax.tick_params(axis="y", labelleft=False)
 
-    ax.set_xlabel("Prediction diagnostic")
+    ax.set_xlabel("Prediction diagnostic", fontsize=18)
+    ax.tick_params(axis="x", labelsize=16)
     ax.grid(axis="x", linestyle=":", alpha=0.28)
 
 
 def plot_regression_row(reg, configs, filename, *, multi):
     n_panels = len(configs)
-    fig_height = 11.2 if multi else 6.2
+    fig_height = 14.0 if multi else 7.6
     fig_width = 5.6 * n_panels + 1.8
     fig, axes = plt.subplots(1, n_panels, figsize=(fig_width, fig_height), sharex=True, sharey=True)
     axes = np.atleast_1d(axes)
@@ -217,7 +218,7 @@ def plot_regression_row(reg, configs, filename, *, multi):
             sub = sub[sub["Protected_Feature"].str.startswith("BTBP_")]
         df = prepare_regression_dotplot(sub, multi)
         draw_regression_dotplot(ax, df, multi=multi, xlim=(0.5, 1.5), show_y=(index == 0))
-        ax.set_title(title, fontsize=12)
+        ax.set_title(title, fontsize=20)
 
     legend = [
         Line2D([], [], marker="o", linestyle="none", color="black", label="Proposed"),
@@ -225,8 +226,8 @@ def plot_regression_row(reg, configs, filename, *, multi):
         Line2D([], [], marker="s", linestyle="none", color=DISTORTED, label="Additional prediction distortion"),
         Line2D([], [], marker="s", linestyle="none", color=UNDISTORTED, label="No additional prediction distortion"),
     ]
-    fig.legend(handles=legend, loc="lower center", ncol=4, frameon=False, fontsize=9, bbox_to_anchor=(0.5, -0.01))
-    fig.tight_layout(rect=(0, 0.05, 1, 1))
+    fig.legend(handles=legend, loc="lower center", ncol=4, frameon=False, fontsize=16, bbox_to_anchor=(0.5, -0.02))
+    fig.tight_layout(rect=(0, 0.08, 1, 1))
     save(fig, filename)
 
 
