@@ -128,7 +128,7 @@ def plot_regression_parity(reg):
 
     fig.legend(handles=legend, loc="lower center", ncol=5, frameon=False, fontsize=9, bbox_to_anchor=(0.5, -0.01))
     fig.tight_layout(rect=(0, 0.05, 1, 1))
-    save(fig, "target_pred.png")
+    save(fig, "target_pred.pdf")
 
 
 # ============================================================
@@ -213,9 +213,9 @@ def plot_regression_dotplot(df, filename, multi=False, ylim=(0.5, 1.5)):
 
 def plot_regression_results(reg):
     single_configs = [
-        ("low_bias_single_cat_equal_distribution", "reg1.png"),
-        ("high_bias_single_cat_equal_distribution", "reg2.png"),
-        ("high_bias_single_cat_unequal_distribution", "reg3.png"),
+        ("low_bias_single_cat_equal_distribution", "reg1.pdf"),
+        ("high_bias_single_cat_equal_distribution", "reg2.pdf"),
+        ("high_bias_single_cat_unequal_distribution", "reg3.pdf"),
     ]
 
     for simulation_type, filename in single_configs:
@@ -223,8 +223,8 @@ def plot_regression_results(reg):
         plot_regression_dotplot(sub, filename, multi=False)
 
     multi_configs = [
-        ("high_bias_multiple_cats_unequal_distribution", "reg4.png"),
-        ("high_bias_multiple_cats_unequal_distribution_poor_model", "reg5.png"),
+        ("high_bias_multiple_cats_unequal_distribution", "reg4.pdf"),
+        ("high_bias_multiple_cats_unequal_distribution_poor_model", "reg5.pdf"),
     ]
 
     for simulation_type, filename in multi_configs:
@@ -338,7 +338,7 @@ def plot_ablations(ab):
 
         fig.suptitle(regime, fontsize=16)
         fig.subplots_adjust(left=0.14, right=0.88, top=0.90, wspace=0.25)
-        save(fig, f"ablations_{regime.lower()}.png")
+        save(fig, f"ablations_{regime.lower()}.pdf")
 
 
 # ============================================================
@@ -439,7 +439,7 @@ def plot_classification(cls):
     colorbar = fig.colorbar(image, cax=color_ax)
     colorbar.set_label("Fairness score", fontsize=13)
     colorbar.ax.tick_params(labelsize=11)
-    save(fig, "class.png")
+    save(fig, "class.pdf")
 
     for name in ["class_utup.png", "class_utbp.png", "class_btup.png", "class_btbp.png"]:
         leftover = PLOTS / name
@@ -496,10 +496,10 @@ def main():
     plot_classification(cls)
 
     print("\nDone. Regenerated:")
-    print("  target_pred.png")
-    print("  reg1.png - reg5.png")
-    print("  ablations_utup.png - ablations_btbp.png")
-    print("  class.png")
+    print("  target_pred.pdf")
+    print("  reg1.pdf - reg5.pdf")
+    print("  ablations_utup.pdf - ablations_btbp.pdf")
+    print("  class.pdf")
 
 
 if __name__ == "__main__":
