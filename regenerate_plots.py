@@ -139,7 +139,7 @@ def prediction_distorted(row):
     return not np.isclose(float(row["target_bias"]), float(row["pred_bias"]))
 
 
-def plot_regression_dotplot(df, filename, multi=False, xlim=(0.5, 1.5)):
+def prepare_regression_dotplot(df, multi):
     df = df.copy()
 
     if multi:
@@ -160,10 +160,11 @@ def plot_regression_dotplot(df, filename, multi=False, xlim=(0.5, 1.5)):
         df = df.sort_values(["Protected_Feature", "group"])
         df["label"] = df["Protected_Feature"].astype(str) + " · " + df["group"]
 
-    y = np.arange(len(df))
+    return df
 
-    fig_height = max(4.2, 0.32 * len(df) + 1.6)
-    fig, ax = plt.subplots(figsize=(9.4, fig_height))
+
+def draw_regression_dotplot(ax, df, *, multi, xlim, show_y):
+    y = np.arange(len(df))
 
     ax.set_xlim(*xlim)
     add_x_parity_regions(ax)
@@ -192,13 +193,31 @@ def plot_regression_dotplot(df, filename, multi=False, xlim=(0.5, 1.5)):
         for boundary in range(4, len(df), 4):
             ax.axhline(boundary - 0.5, color="#E3E3E3", linewidth=1.0, zorder=0)
 
-    ax.set_ylim(-0.65, len(df) - 0.35)
+    ax.set_ylim(len(df) - 0.35, -0.65)
     ax.set_yticks(y)
-    ax.set_yticklabels(df["label"], fontsize=8)
-    ax.invert_yaxis()
+    if show_y:
+        ax.set_yticklabels(df["label"], fontsize=8)
+    else:
+        ax.set_yticklabels([])
 
     ax.set_xlabel("Prediction diagnostic")
     ax.grid(axis="x", linestyle=":", alpha=0.28)
+
+
+def plot_regression_row(reg, configs, filename, *, multi):
+    n_panels = len(configs)
+    fig_height = 11.2 if multi else 6.2
+    fig_width = 5.6 * n_panels + 1.8
+    fig, axes = plt.subplots(1, n_panels, figsize=(fig_width, fig_height), sharex=True, sharey=True)
+    axes = np.atleast_1d(axes)
+
+    for index, (ax, (simulation_type, title)) in enumerate(zip(axes, configs)):
+        sub = reg[reg["simulation_type"] == simulation_type]
+        if multi:
+            sub = sub[sub["Protected_Feature"].str.startswith("BTBP_")]
+        df = prepare_regression_dotplot(sub, multi)
+        draw_regression_dotplot(ax, df, multi=multi, xlim=(0.5, 1.5), show_y=(index == 0))
+        ax.set_title(title, fontsize=12)
 
     legend = [
         Line2D([], [], marker="o", linestyle="none", color="black", label="Proposed"),
@@ -206,31 +225,36 @@ def plot_regression_dotplot(df, filename, multi=False, xlim=(0.5, 1.5)):
         Line2D([], [], marker="s", linestyle="none", color=DISTORTED, label="Additional prediction distortion"),
         Line2D([], [], marker="s", linestyle="none", color=UNDISTORTED, label="No additional prediction distortion"),
     ]
-
-    ax.legend(handles=legend, loc="best", frameon=False, fontsize=8)
-    fig.tight_layout()
+    fig.legend(handles=legend, loc="lower center", ncol=4, frameon=False, fontsize=9, bbox_to_anchor=(0.5, -0.01))
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
     save(fig, filename)
 
 
 def plot_regression_results(reg):
-    single_configs = [
-        ("low_bias_single_cat_equal_distribution", "reg1.pdf"),
-        ("high_bias_single_cat_equal_distribution", "reg2.pdf"),
-        ("high_bias_single_cat_unequal_distribution", "reg3.pdf"),
-    ]
+    plot_regression_row(
+        reg,
+        [
+            ("low_bias_single_cat_equal_distribution", "Low bias, equal prevalence"),
+            ("high_bias_single_cat_equal_distribution", "High bias, equal prevalence"),
+            ("high_bias_single_cat_unequal_distribution", "High bias, unequal prevalence"),
+        ],
+        "reg1-3.pdf",
+        multi=False,
+    )
+    plot_regression_row(
+        reg,
+        [
+            ("high_bias_multiple_cats_unequal_distribution", "Multiple categories"),
+            ("high_bias_multiple_cats_unequal_distribution_poor_model", "Multiple categories, poor model"),
+        ],
+        "reg4-5.pdf",
+        multi=True,
+    )
 
-    for simulation_type, filename in single_configs:
-        sub = reg[reg["simulation_type"] == simulation_type]
-        plot_regression_dotplot(sub, filename, multi=False)
-
-    multi_configs = [
-        ("high_bias_multiple_cats_unequal_distribution", "reg4.pdf"),
-        ("high_bias_multiple_cats_unequal_distribution_poor_model", "reg5.pdf"),
-    ]
-
-    for simulation_type, filename in multi_configs:
-        sub = reg[(reg["simulation_type"] == simulation_type) & reg["Protected_Feature"].str.startswith("BTBP_")]
-        plot_regression_dotplot(sub, filename, multi=True)
+    for name in ["reg1.pdf", "reg2.pdf", "reg3.pdf", "reg4.pdf", "reg5.pdf"]:
+        leftover = PLOTS / name
+        if leftover.exists():
+            leftover.unlink()
 
 
 # ============================================================
@@ -498,7 +522,7 @@ def main():
 
     print("\nDone. Regenerated:")
     print("  target_pred.pdf")
-    print("  reg1.pdf - reg5.pdf")
+    print("  reg1-3.pdf, reg4-5.pdf")
     print("  ablations_utup.pdf - ablations_btbp.pdf")
     print("  class.pdf")
 
