@@ -47,12 +47,12 @@ def multi_setting(feature):
     return f"{match.group(1)}-{match.group(2)}" if match else str(feature)
 
 
-def add_y_parity_regions(ax):
-    ymin, ymax = ax.get_ylim()
-    if ymin < PARITY_LOW:
-        ax.axhspan(ymin, PARITY_LOW, color="#F2D7D5", alpha=0.50, zorder=0)
-    if ymax > PARITY_HIGH:
-        ax.axhspan(PARITY_HIGH, ymax, color="#F2D7D5", alpha=0.50, zorder=0)
+def add_x_parity_regions(ax):
+    xmin, xmax = ax.get_xlim()
+    if xmin < PARITY_LOW:
+        ax.axvspan(xmin, PARITY_LOW, color="#F2D7D5", alpha=0.50, zorder=0)
+    if xmax > PARITY_HIGH:
+        ax.axvspan(PARITY_HIGH, xmax, color="#F2D7D5", alpha=0.50, zorder=0)
 
 
 def add_xy_parity_regions(ax):
@@ -139,7 +139,7 @@ def prediction_distorted(row):
     return not np.isclose(float(row["target_bias"]), float(row["pred_bias"]))
 
 
-def plot_regression_dotplot(df, filename, multi=False, ylim=(0.5, 1.5)):
+def plot_regression_dotplot(df, filename, multi=False, xlim=(0.5, 1.5)):
     df = df.copy()
 
     if multi:
@@ -160,44 +160,45 @@ def plot_regression_dotplot(df, filename, multi=False, ylim=(0.5, 1.5)):
         df = df.sort_values(["Protected_Feature", "group"])
         df["label"] = df["Protected_Feature"].astype(str) + " · " + df["group"]
 
-    x = np.arange(len(df))
+    y = np.arange(len(df))
 
-    fig_width = max(8.4, 0.38 * len(df) + 2.0)
-    fig, ax = plt.subplots(figsize=(fig_width, 5.8))
+    fig_height = max(4.2, 0.32 * len(df) + 1.6)
+    fig, ax = plt.subplots(figsize=(9.4, fig_height))
 
-    ax.set_ylim(*ylim)
-    add_y_parity_regions(ax)
-    ax.axhline(1.0, color="black", linewidth=0.8, alpha=0.5)
+    ax.set_xlim(*xlim)
+    add_x_parity_regions(ax)
+    ax.axvline(1.0, color="black", linewidth=0.8, alpha=0.5)
 
-    for xi, (_, row) in zip(x, df.iterrows()):
+    for yi, (_, row) in zip(y, df.iterrows()):
         color = DISTORTED if prediction_distorted(row) else UNDISTORTED
 
         ours = float(row["FairAI_pred"])
         dalex = float(row["dalex_pred"])
 
-        ours_plot = min(ours, ylim[1])
-        dalex_plot = min(dalex, ylim[1])
+        ours_plot = min(ours, xlim[1])
+        dalex_plot = min(dalex, xlim[1])
 
-        ax.plot([xi, xi], [ours_plot, dalex_plot], color="#CFCFCF", linewidth=0.8, zorder=1)
-        ax.scatter(xi, ours_plot, marker="o", s=48, color=color, zorder=3)
-        ax.scatter(xi, dalex_plot, marker="^", s=52, color=color, zorder=3)
+        ax.plot([ours_plot, dalex_plot], [yi, yi], color="#CFCFCF", linewidth=0.8, zorder=1)
+        ax.scatter(ours_plot, yi, marker="o", s=48, color=color, zorder=3)
+        ax.scatter(dalex_plot, yi, marker="^", s=52, color=color, zorder=3)
 
-        if ours > ylim[1]:
-            ax.annotate(f"↑{ours:.2f}", (xi, ylim[1]), xytext=(-3, -2), textcoords="offset points", ha="right", va="top", fontsize=7, color=color)
+        if ours > xlim[1]:
+            ax.annotate(f"{ours:.2f}→", (xlim[1], yi), xytext=(-3, 6), textcoords="offset points", ha="right", va="center", fontsize=7, color=color)
 
-        if dalex > ylim[1]:
-            ax.annotate(f"↑{dalex:.2f}", (xi, ylim[1]), xytext=(3, -2), textcoords="offset points", ha="left", va="top", fontsize=7, color=color)
+        if dalex > xlim[1]:
+            ax.annotate(f"{dalex:.2f}→", (xlim[1], yi), xytext=(-3, -6), textcoords="offset points", ha="right", va="center", fontsize=7, color=color)
 
     if multi:
         for boundary in range(4, len(df), 4):
-            ax.axvline(boundary - 0.5, color="#E3E3E3", linewidth=1.0, zorder=0)
+            ax.axhline(boundary - 0.5, color="#E3E3E3", linewidth=1.0, zorder=0)
 
-    ax.set_xlim(-0.65, len(df) - 0.35)
-    ax.set_xticks(x)
-    ax.set_xticklabels(df["label"], fontsize=8, rotation=45, ha="right")
+    ax.set_ylim(-0.65, len(df) - 0.35)
+    ax.set_yticks(y)
+    ax.set_yticklabels(df["label"], fontsize=8)
+    ax.invert_yaxis()
 
-    ax.set_ylabel("Prediction diagnostic")
-    ax.grid(axis="y", linestyle=":", alpha=0.28)
+    ax.set_xlabel("Prediction diagnostic")
+    ax.grid(axis="x", linestyle=":", alpha=0.28)
 
     legend = [
         Line2D([], [], marker="o", linestyle="none", color="black", label="Proposed"),
