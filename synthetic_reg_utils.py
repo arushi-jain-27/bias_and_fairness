@@ -211,13 +211,13 @@ def generate_multi_cat_regression_simulation(seed=0, prediction_scale=5):
         return df
 
     df = add_biases(df, "ML_O", 1, 4, 1.2, 0.85, 1.45, 0.65)
-    df = add_biases(df, "ML_S", 1, 4, 1.2, 1.4, 1.45, 1.1)
+    df = add_biases(df, "ML_S", 1, 4, 1.2, 1.1, 1.45, 1.4)
     df = add_biases(df, "MH_O", 1, 3, 1.2, 0.85, 1.45, 0.65)
-    df = add_biases(df, "MH_S", 1, 3, 1.2, 1.4, 1.45, 1.1)
+    df = add_biases(df, "MH_S", 1, 3, 1.2, 1.1, 1.45, 1.4)
     df = add_biases(df, "LH_O", 3, 4, 1.2, 0.85, 1.45, 0.65)
-    df = add_biases(df, "LH_S", 3, 4, 1.2, 1.4, 1.45, 1.1)
+    df = add_biases(df, "LH_S", 3, 4, 1.2, 1.1, 1.45, 1.4)
     df = add_biases(df, "MM_O", 1, 2, 1.2, 0.85, 1.45, 0.65)
-    df = add_biases(df, "MM_S", 1, 2, 1.2, 1.4, 1.45, 1.1)
+    df = add_biases(df, "MM_S", 1, 2, 1.2, 1.1, 1.45, 1.4)
     return df, biased_categories
 
 
