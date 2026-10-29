@@ -314,8 +314,8 @@ def plot_ablation_panel(ax, df, *, show_right_ticks=False, wrap_chars=8, xlim=(0
         tick_positions = [pos_map[(row["level"], row["Protected_Class"])] for _, row in df_plot.iterrows()]
         tick_labels = [row["Protected_Class"] for _, row in df_plot.iterrows()]
         ax.set_yticks(tick_positions)
-        ax.set_yticklabels(tick_labels, fontsize=10)
-        ax.tick_params(axis="y", labelright=True, labelleft=False, labelsize=10)
+        ax.set_yticklabels(tick_labels, fontsize=14)
+        ax.tick_params(axis="y", labelright=True, labelleft=False, labelsize=14)
         ax.yaxis.set_ticks_position("right")
         ax.yaxis.set_label_position("right")
     else:
@@ -332,14 +332,15 @@ def plot_ablation_panel(ax, df, *, show_right_ticks=False, wrap_chars=8, xlim=(0
             transform=ax.get_yaxis_transform(),
             ha="right",
             va="center",
-            fontsize=10,
+            fontsize=14,
             linespacing=1.1,
             wrap=True,
             clip_on=False,
             bbox=dict(facecolor="white", edgecolor="none", alpha=0.85, pad=2),
         )
 
-    ax.set_xlabel("Fairness Score", fontsize=12)
+    ax.set_xlabel("Fairness Score", fontsize=16)
+    ax.tick_params(axis="x", labelsize=14)
     ax.axvline(x=PARITY_LOW, color="black", linestyle=":", linewidth=2, alpha=0.8)
     ax.set_xlim(*xlim)
     if y_positions:
@@ -354,16 +355,22 @@ def plot_ablations(ab):
         dist = sub[sub["ablation"] == "vary_distribution"]
         model = sub[sub["ablation"] == "vary_model"]
 
-        fig, axes = plt.subplots(1, 3, figsize=(22, 7.2), sharey=False)
+        fig, axes = plt.subplots(1, 3, figsize=(26, 8.0), sharey=False)
         plot_ablation_panel(axes[0], bias, show_right_ticks=False, xlim=(0.4, 1))
-        axes[0].set_title("Varying Bias", fontsize=12)
+        bias_titles = {
+            "UTUP": r"Varying Bias — neither applied",
+            "UTBP": r"Varying Bias — only $p$ applied",
+            "BTUP": r"Varying Bias — only $t$ applied to both",
+            "BTBP": r"Varying Bias — $t,p$ applied",
+        }
+        axes[0].set_title(bias_titles[regime], fontsize=18)
         plot_ablation_panel(axes[1], dist, show_right_ticks=False, xlim=(0.6, 1))
-        axes[1].set_title("Varying Distribution", fontsize=12)
+        axes[1].set_title("Varying Distribution", fontsize=18)
         plot_ablation_panel(axes[2], model, show_right_ticks=True, xlim=(0.6, 1))
-        axes[2].set_title("Varying Model Quality", fontsize=12)
+        axes[2].set_title("Varying Model Quality", fontsize=18)
 
-        fig.suptitle(regime, fontsize=16)
-        fig.subplots_adjust(left=0.14, right=0.88, top=0.90, wspace=0.25)
+        fig.suptitle(regime, fontsize=20)
+        fig.subplots_adjust(left=0.14, right=0.88, top=0.88, wspace=0.22)
         save(fig, f"ablations_{regime.lower()}.pdf")
 
 
